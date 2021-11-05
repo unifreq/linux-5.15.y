@@ -1,28 +1,17 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
- * Copyright (c) 2019 BayLibre, SAS
- * Author: Neil Armstrong <narmstrong@baylibre.com>
- * Copyright (c) 2019 Christian Hewitt <christianshewitt@gmail.com>
+ * Copyright (c) 2021 Christian Hewitt <christianshewitt@gmail.com>
  */
 
-/dts-v1/;
-
 #include "meson-g12b-w400.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 
 / {
-	compatible = "azw,gtking", "amlogic,s922x", "amlogic,g12b";
-	model = "Beelink GT-King";
-
-	aliases {
-		rtc0 = &rtc;
-		rtc1 = &vrtc;
-	};
-
- 	memory@0 {
- 		device_type = "memory";
-		reg = <0x0 0x0 0x0 0x80000000>;
- 	};
+        cvbs-connector {
+		status = "disabled";
+        };
 
 	spdif_dit: audio-codec-1 {
 		#sound-dai-cells = <0>;
@@ -33,7 +22,7 @@
 
 	sound {
 		compatible = "amlogic,axg-sound-card";
-		model = "GTKING";
+		model = "DREAMBOX";
 		audio-aux-devs = <&tdmout_b>;
 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
@@ -110,20 +99,6 @@
 			};
 		};
 	};
-
-        vddgpu: regulator-vddgpu {
-                compatible = "regulator-fixed";
-                regulator-name = "mali";
-                regulator-min-microvolt = <800000>;
-                regulator-max-microvolt = <800000>;
-                vin-supply = <&vcc_5v>;
-                regulator-boot-on;
-                regulator-always-on;
-        };
-};
-
-&mali {
-        mali-supply=<&vddgpu>;
 };
 
 &arb {
@@ -146,17 +121,13 @@
 	status = "okay";
 };
 
+&ir {
+	linux,rc-map-name = "rc-dreambox";
+};
 
-&i2c3 {
+&saradc {
 	status = "okay";
-	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
-	pinctrl-names = "default";
-
-	rtc: rtc@51 {
-		compatible = "nxp,pcf8563";
-		reg = <0x51>;
-		wakeup-source;
-	};
+	vref-supply = <&vddao_1v8>;
 };
 
 &spdifout {
@@ -179,35 +150,4 @@
 
 &tohdmitx {
 	status = "okay";
-};
-
-/* SDIO */
-&sd_emmc_a {
-        //max-frequency = <200000000>;
-        //sd-uhs-sdr104;
-        max-frequency = <50000000>;
-        sd-uhs-ddr50;
-        //sd-uhs-sdr50;
-        //max-frequency = <100000000>;
-};
-
-/* SD CARD */
-&sd_emmc_b {
-        cap-sd-highspeed;
-        max-frequency = <50000000>;
-};
-
-/* EMMC */
-&sd_emmc_c {
-        mmc-hs200-1_8v;
-        max-frequency = <200000000>;
-};
- 
-&ethmac {
-	snps,aal;
-	snps,rxpbl = <0x8>;
-	snps,txpbl = <0x8>;
-
-	rx-fifo-depth = <4096>;
-	tx-fifo-depth = <4096>;
 };

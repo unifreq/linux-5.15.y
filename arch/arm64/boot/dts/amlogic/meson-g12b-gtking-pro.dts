@@ -19,6 +19,11 @@
 		rtc1 = &vrtc;
 	};
 
+ 	memory@0 {
+ 		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+ 	};
+
 	gpio-keys-polled {
 		compatible = "gpio-keys-polled";
 		#address-cells = <1>;
@@ -95,6 +100,21 @@
 			};
 		};
 	};
+
+        vddgpu: regulator-vddgpu {
+                compatible = "regulator-fixed";
+                regulator-name = "mali";
+                //regulator-name = "VDDGPU";
+                regulator-min-microvolt = <800000>;
+                regulator-max-microvolt = <800000>;
+                vin-supply = <&vcc_5v>;
+                regulator-boot-on;
+                regulator-always-on;
+        };
+};
+
+&mali {
+        mali-supply=<&vddgpu>;
 };
 
 &arb {
@@ -139,4 +159,35 @@
 
 &tohdmitx {
 	status = "okay";
+};
+
+/* SDIO */
+&sd_emmc_a {
+        //max-frequency = <100000000>;
+        //sd-uhs-sdr50;
+        //max-frequency = <200000000>;
+        //sd-uhs-sdr104;
+        max-frequency = <50000000>;
+        sd-uhs-ddr50;
+};
+
+/* SD Card */
+&sd_emmc_b {
+        cap-sd-highspeed;
+        max-frequency = <50000000>;
+};
+
+/* EMMC */
+&sd_emmc_c {
+        mmc-hs200-1_8v;
+        max-frequency = <200000000>;
+};
+ 
+&ethmac {
+	snps,aal;
+	snps,rxpbl = <0x8>;
+	snps,txpbl = <0x8>;
+
+	rx-fifo-depth = <4096>;
+	tx-fifo-depth = <4096>;
 };
