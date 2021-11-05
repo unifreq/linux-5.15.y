@@ -15,6 +15,7 @@
 
 	aliases {
 		serial0 = &uart_AO;
+		serial2 = &uart_C;
 		ethernet0 = &ethmac;
 	};
 
@@ -164,6 +165,32 @@
 			codec-0 {
 				sound-dai = <&hdmi_tx>;
 			};
+		};
+	};
+
+	spi-gpio {
+		compatible = "spi-gpio";
+		#address-cells = <0x1>;
+		#size-cells = <0x0>;
+		ranges;
+		status = "ok";
+		sck-gpios  = <&gpio GPIOY_9 0>;
+		miso-gpios = <&gpio GPIOY_7 0>;
+		mosi-gpios = <&gpio GPIOY_5 0>;
+		cs-gpios  = <&gpio GPIOY_8 0
+			     &gpio GPIOY_10 0>;
+		num-chipselects = <2>;
+
+		/* clients */
+		spidev0@0 {
+			compatible = "spidev";
+			reg = <0>;
+			spi-max-frequency = <500000>;
+		};
+		spidev0@1 {
+			compatible = "spidev";
+			reg = <1>;
+			spi-max-frequency = <500000>;
 		};
 	};
 };
@@ -358,7 +385,7 @@
 
 /* eMMC */
 &sd_emmc_c {
-	status = "disabled";
+	status = "okay";
 	pinctrl-0 = <&emmc_pins>, <&emmc_ds_pins>;
 	pinctrl-1 = <&emmc_clk_gate_pins>;
 	pinctrl-names = "default", "clk-gate";
@@ -368,8 +395,6 @@
 	non-removable;
 	disable-wp;
 	cap-mmc-highspeed;
-	mmc-ddr-1_8v;
-	mmc-hs200-1_8v;
 
 	mmc-pwrseq = <&emmc_pwrseq>;
 	vmmc-supply = <&vcc3v3>;

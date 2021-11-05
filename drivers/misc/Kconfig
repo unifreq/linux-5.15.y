@@ -470,6 +470,17 @@ config HISI_HIKEY_USB
 	  switching between the dual-role USB-C port and the USB-A host ports
 	  using only one USB controller.
 
+config KHADAS_FAN
+	tristate "Khadas FAN"
+	default y
+	help
+	  This driver is for Khadas FAN.
+
+config KHADAS_MCU
+	tristate "Khadas boards on-board MCU"
+	help
+	  This driver provides support for Khadas boards on-board MCU.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

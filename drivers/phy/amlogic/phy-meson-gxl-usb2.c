@@ -114,8 +114,10 @@ static int phy_meson_gxl_usb2_init(struct phy *phy)
 		return ret;
 
 	ret = clk_prepare_enable(priv->clk);
-	if (ret)
+	if (ret) {
+		reset_control_rearm(priv->reset);
 		return ret;
+	}
 
 	return 0;
 }
@@ -124,6 +126,7 @@ static int phy_meson_gxl_usb2_exit(struct phy *phy)
 {
 	struct phy_meson_gxl_usb2_priv *priv = phy_get_drvdata(phy);
 
+	reset_control_rearm(priv->reset);
 	clk_disable_unprepare(priv->clk);
 
 	return 0;

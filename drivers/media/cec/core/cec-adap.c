@@ -510,9 +510,9 @@ int cec_thread_func(void *_adap)
 			 * unable to transmit for CEC_XFER_TIMEOUT_MS (2.1s).
 			 */
 			if (adap->transmitting) {
-				pr_warn("cec-%s: message %*ph timed out\n", adap->name,
-					adap->transmitting->msg.len,
-					adap->transmitting->msg.msg);
+				//pr_warn("cec-%s: message %*ph timed out\n", adap->name,
+				//	adap->transmitting->msg.len,
+				//	adap->transmitting->msg.msg);
 				/* Just give up on this. */
 				cec_data_cancel(adap->transmitting,
 						CEC_TX_STATUS_TIMEOUT);

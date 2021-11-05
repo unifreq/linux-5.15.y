@@ -105,6 +105,8 @@ struct amlogic_thermal {
 	u32 trim_info;
 };
 
+static struct amlogic_thermal *amlogic_thermal_data_ptr;
+
 /*
  * Calculate a temperature value from a temperature code.
  * The unit of the temperature is degree milliCelsius.
@@ -195,6 +197,21 @@ static int amlogic_thermal_get_temp(void *data, int *temp)
 	return 0;
 }
 
+int meson_g12_get_temperature(void)
+{
+	int temp;
+	int ret;
+
+	ret = amlogic_thermal_get_temp(amlogic_thermal_data_ptr, &temp);
+	if (ret) {
+		printk("amlogic_thermal_get_temp() failed!\n");
+		return ret;
+	}
+
+	return temp / 1000;
+}
+EXPORT_SYMBOL(meson_g12_get_temperature);
+
 static const struct thermal_zone_of_device_ops amlogic_thermal_ops = {
 	.get_temp	= amlogic_thermal_get_temp,
 };
@@ -248,6 +265,8 @@ static int amlogic_thermal_probe(struct platform_device *pdev)
 	pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata)
 		return -ENOMEM;
+
+	amlogic_thermal_data_ptr = pdata;
 
 	pdata->data = of_device_get_match_data(dev);
 	pdata->pdev = pdev;

@@ -1783,7 +1783,7 @@ static struct clk_regmap g12a_hifi_pll_dco = {
 		},
 		.l = {
 			.reg_off = HHI_HIFI_PLL_CNTL0,
-			.shift   = 31,
+			.shift   = 30,
 			.width   = 1,
 		},
 		.rst = {

@@ -333,6 +333,13 @@
 	};
 };
 
+&i2c3 {
+	clock-frequency = <100000>;
+	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
 &i2c_AO {
 	status = "okay";
 	pinctrl-0 = <&i2c_ao_sck_pins>, <&i2c_ao_sda_pins>;
@@ -356,6 +363,16 @@
 		compatible = "haoyu,hym8563";
 		reg = <0x51>;
 		#clock-cells = <0>;
+	};
+
+	khadas-mcu@18 {
+		status = "okay";
+		compatible = "khadas-mcu";
+		reg = <0x18>;
+		fan,trig_temp_level0 = <50>;
+		fan,trig_temp_level1 = <60>;
+		fan,trig_temp_level2 = <70>;
+		hwver = "VIM3.V11"; /* Will be updated in uboot. */
 	};
 };
 

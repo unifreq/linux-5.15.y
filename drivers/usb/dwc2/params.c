@@ -105,6 +105,7 @@ static void dwc2_set_ltq_params(struct dwc2_hsotg *hsotg)
 	p->max_packet_count = 511;
 	p->ahbcfg = GAHBCFG_HBSTLEN_INCR16 <<
 		GAHBCFG_HBSTLEN_SHIFT;
+	p->power_down = false;
 }
 
 static void dwc2_set_amlogic_params(struct dwc2_hsotg *hsotg)

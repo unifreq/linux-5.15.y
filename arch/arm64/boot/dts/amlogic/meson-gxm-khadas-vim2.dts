@@ -47,7 +47,19 @@
 		reset-gpios = <&gpio BOOT_9 GPIO_ACTIVE_LOW>;
 	};
 
+	fan {
+		compatible = "fanctl";
+		fan_ctl0 = <&gpio GPIODV_14 GPIO_ACTIVE_HIGH>;
+		fan_ctl1 = <&gpio GPIODV_15 GPIO_ACTIVE_HIGH>;
+		trig_temp_level0 = <50>;
+		trig_temp_level1 = <60>;
+		trig_temp_level2 = <70>;
+		hwver = "VIM2.V12"; /* Will be updated in uboot. */
+		status = "okay";
+	};
+
 	gpio_fan: gpio-fan {
+		status = "disabled";
 		compatible = "gpio-fan";
 		gpios = <&gpio GPIODV_14 GPIO_ACTIVE_HIGH
 			 &gpio GPIODV_15 GPIO_ACTIVE_HIGH>;
@@ -272,6 +284,16 @@
 		#clock-cells = <0>;
 		clock-frequency = <32768>;
 		clock-output-names = "xin32k";
+	};
+
+	khadas-mcu@18 {
+		status = "okay";
+		compatible = "khadas-mcu";
+		reg = <0x18>;
+		fan,trig_temp_level0 = <50>;
+		fan,trig_temp_level1 = <60>;
+		fan,trig_temp_level2 = <70>;
+		hwver = "VIM2.V12"; /* Will be updated in uboot. */
 	};
 };
 

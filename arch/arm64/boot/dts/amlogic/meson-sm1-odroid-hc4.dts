@@ -130,6 +130,20 @@
 	};
 };
 
+&spifc {
+	status = "okay";
+	pinctrl-0 = <&nor_pins>;
+	pinctrl-names = "default";
+
+	xt25f128b: spi-flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <104000000>;
+	};
+};
+
 &usb {
 	phys = <&usb2_phy1>;
 	phy-names = "usb2-phy1";

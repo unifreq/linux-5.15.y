@@ -54,6 +54,8 @@ static const u32 scpi_scale[] = {
 	[ENERGY]	= 1000000,	/* (microjoules)	*/
 };
 
+static struct scpi_thermal_zone *g_scpi_thermal_zone_ptr;
+
 static void scpi_scale_reading(u64 *value, struct sensor_data *sensor)
 {
 	if (scpi_scale[sensor->info.class] != sensor->scale) {
@@ -80,6 +82,20 @@ static int scpi_read_temp(void *dev, int *temp)
 	*temp = value;
 	return 0;
 }
+
+int meson_gx_get_temperature(void)
+{
+	int temp;
+	int ret;
+	ret = scpi_read_temp(g_scpi_thermal_zone_ptr, &temp);
+	if (ret) {
+		printk("scpi_read_temp() failed!\n");
+		return ret;
+	}
+
+	return temp / 1000;
+}
+EXPORT_SYMBOL(meson_gx_get_temperature);
 
 /* hwmon callback functions */
 static ssize_t
@@ -274,6 +290,8 @@ static int scpi_hwmon_probe(struct platform_device *pdev)
 		zone = devm_kzalloc(dev, sizeof(*zone), GFP_KERNEL);
 		if (!zone)
 			return -ENOMEM;
+
+		g_scpi_thermal_zone_ptr = zone;
 
 		zone->sensor_id = i;
 		zone->scpi_sensors = scpi_sensors;
