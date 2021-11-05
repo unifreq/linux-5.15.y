@@ -493,6 +493,7 @@
 			interrupts = <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>;
 			max-frequency = <150000000>;
 			status = "disabled";
+			bus-width = <0x4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};

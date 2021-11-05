@@ -199,6 +199,7 @@
 			resets = <&ccu RST_BUS_MMC0>;
 			reset-names = "ahb";
 			interrupts = <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>;
+			bus-width = <0x4>;
 			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -433,6 +434,16 @@
 			i2c2_pins: i2c2-pins {
 				pins = "PE12", "PE13";
 				function = "i2c2";
+			};
+
+			i2s0_pins: i2s0-pins {
+				pins = "PA18", "PA19", "PA20", "PA21";
+				function = "i2s0";
+			};
+
+			i2s1_pins: i2s1-pins {
+				pins = "PG10", "PG11", "PG12", "PG13";
+				function = "i2s1";
 			};
 
 			mmc0_pins: mmc0-pins {

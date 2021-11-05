@@ -33,3 +33,7 @@
 	 */
 	regulator-enable-ramp-delay = <100000>;
 };
+
+&reg_dc1sw {
+       regulator-enable-ramp-delay = <100000>;
+};
