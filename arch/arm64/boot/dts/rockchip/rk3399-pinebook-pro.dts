@@ -25,7 +25,13 @@
 	};
 
 	chosen {
+        bootargs = "earlycon=uart8250,mmio32,0xff1a0000";
 		stdout-path = "serial2:1500000n8";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x0 0x00200000 0x0 0xf7e00000>;
 	};
 
 	backlight: edp-backlight {
@@ -136,6 +142,12 @@
 
 		/* WL_REG_ON on module */
 		reset-gpios = <&gpio0 RK_PB2 GPIO_ACTIVE_LOW>;
+	};
+
+	/* first 128k(0xff8d0000~0xff8f0000) for ddr and ATF */
+	sram@ff8d0000 {
+		compatible = "mmio-sram";
+		reg = <0x0 0xff8d0000 0x0 0x20000>; /* 128k */
 	};
 
 	/* Audio components */
@@ -383,10 +395,6 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&dc_det_pin>;
 	};
-};
-
-&cdn_dp {
-	status = "okay";
 };
 
 &cpu_b0 {
@@ -711,7 +719,7 @@
 
 		connector {
 			compatible = "usb-c-connector";
-			data-role = "host";
+			data-role = "dual";
 			label = "USB-C";
 			op-sink-microwatt = <1000000>;
 			power-role = "dual";
@@ -933,6 +941,29 @@
 
 &pwm2 {
 	status = "okay";
+};
+
+&rockchip_suspend {
+	status = "okay";
+	rockchip,sleep-debug-en = <1>;
+	rockchip,sleep-mode-config = <
+		(0
+		| RKPM_SLP_ARMPD
+		| RKPM_SLP_PERILPPD
+		| RKPM_SLP_DDR_RET
+		| RKPM_SLP_PLLPD
+		| RKPM_SLP_CENTER_PD
+		| RKPM_SLP_AP_PWROFF
+		)
+	>;
+	rockchip,pwm-regulator-config = <
+		(0
+		| PWM2_REGULATOR_EN
+		)
+	>;
+	rockchip,power-ctrl =
+		<&gpio1 RK_PC1 GPIO_ACTIVE_HIGH>,
+		<&gpio1 RK_PB6 GPIO_ACTIVE_HIGH>;
 };
 
 &saradc {
