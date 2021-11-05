@@ -58,6 +58,36 @@ static int brcmf_of_get_country_codes(struct device *dev,
 	return 0;
 }
 
+/* TODO: FIXME: Use DT */
+static void brcmf_of_probe_cc(struct device *dev,
+			      struct brcmf_mp_device *settings)
+{
+	static struct brcmfmac_pd_cc_entry netgear_r8000_cc_ent[] = {
+		{ "JP", "JP", 78 },
+		{ "US", "Q2", 86 },
+	};
+	struct brcmfmac_pd_cc_entry *cc_ent = NULL;
+	int table_size = 0;
+
+	if (of_machine_is_compatible("netgear,r8000")) {
+		cc_ent = netgear_r8000_cc_ent;
+		table_size = ARRAY_SIZE(netgear_r8000_cc_ent);
+	}
+
+	if (cc_ent && table_size) {
+		struct brcmfmac_pd_cc *cc;
+		size_t memsize;
+
+		memsize = table_size * sizeof(struct brcmfmac_pd_cc_entry);
+		cc = devm_kzalloc(dev, sizeof(*cc) + memsize, GFP_KERNEL);
+		if (!cc)
+			return;
+		cc->table_size = table_size;
+		memcpy(cc->table, cc_ent, memsize);
+		settings->country_codes = cc;
+	}
+}
+
 void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
 		    struct brcmf_mp_device *settings)
 {
@@ -89,6 +119,8 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
 
 		of_node_put(root);
 	}
+
+	brcmf_of_probe_cc(dev, settings);
 
 	if (!np || !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
 		return;
