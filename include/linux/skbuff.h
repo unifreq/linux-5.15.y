@@ -852,6 +852,7 @@ struct sk_buff {
 #ifdef CONFIG_IPV6_NDISC_NODETYPE
 	__u8			ndisc_nodetype:2;
 #endif
+	__u8			gro_skip:1;
 
 	__u8			ipvs_property:1;
 	__u8			inner_protocol_type:1;
@@ -2708,7 +2709,7 @@ static inline int pskb_network_may_pull(struct sk_buff *skb, unsigned int len)
  * NET_IP_ALIGN(2) + ethernet_header(14) + IP_header(20/40) + ports(8)
  */
 #ifndef NET_SKB_PAD
-#define NET_SKB_PAD	max(32, L1_CACHE_BYTES)
+#define NET_SKB_PAD	max(64, L1_CACHE_BYTES)
 #endif
 
 int ___pskb_trim(struct sk_buff *skb, unsigned int len);
