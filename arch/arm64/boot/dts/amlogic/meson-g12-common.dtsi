@@ -1923,7 +1923,7 @@
 							groups = "uart_ao_a_tx",
 								 "uart_ao_a_rx";
 							function = "uart_ao_a";
-							bias-disable;
+							bias-pull-up;
 						};
 					};
 
@@ -1932,7 +1932,7 @@
 							groups = "uart_ao_a_cts",
 								 "uart_ao_a_rts";
 							function = "uart_ao_a";
-							bias-disable;
+							bias-pull-up;
 						};
 					};
 
