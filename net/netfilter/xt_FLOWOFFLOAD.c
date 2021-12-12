@@ -177,8 +177,6 @@ xt_flowoffload_check_hook(struct flow_offload *flow, void *data)
 		hook->used = true;
 	}
 	spin_unlock_bh(&hooks_lock);
-
-	cond_resched();
 }
 
 static void
