@@ -132,10 +132,10 @@
 
 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
 	pinctrl-names = "default";
-	phy-mode = "rgmii-txid";
+	phy-mode = "rgmii";
 	phy-handle = <&external_phy>;
 
-	rx-internal-delay-ps = <800>;
+	amlogic,tx-delay-ns = <2>;
 
 	snps,aal;
 	snps,rxpbl = <0x8>;
