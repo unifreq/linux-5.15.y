@@ -9,3 +9,4 @@ obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
 obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
 obj-$(CONFIG_RTW88)		+= rtw88/
 obj-$(CONFIG_RTL8189ES)		+= rtl8189es/
+obj-$(CONFIG_RTL8189FS)		+= rtl8189fs/
