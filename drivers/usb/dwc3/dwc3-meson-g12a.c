@@ -828,6 +828,9 @@ err_disable_regulator:
 err_rearm:
 	reset_control_rearm(priv->reset);
 
+err_rearm:
+	reset_control_rearm(priv->reset);
+
 err_disable_clks:
 	clk_bulk_disable_unprepare(priv->drvdata->num_clks,
 				   priv->drvdata->clks);
@@ -854,6 +857,8 @@ static int dwc3_meson_g12a_remove(struct platform_device *pdev)
 	pm_runtime_disable(dev);
 	pm_runtime_put_noidle(dev);
 	pm_runtime_set_suspended(dev);
+
+	reset_control_rearm(priv->reset);
 
 	reset_control_rearm(priv->reset);
 
