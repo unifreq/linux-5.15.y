@@ -475,15 +475,16 @@ flowoffload_tg(struct sk_buff *skb, const struct xt_action_param *par)
 	}
 
 	table = &flowtable[!!(info->flags & XT_FLOWOFFLOAD_HW)];
+
+	net = read_pnet(&table->ft.net);
+	if (!net)
+		write_pnet(&table->ft.net, xt_net(par));
+
 	if (flow_offload_add(&table->ft, flow) < 0)
 		goto err_flow_add;
 
 	xt_flowoffload_check_device(table, devs[0]);
 	xt_flowoffload_check_device(table, devs[1]);
-
-	net = read_pnet(&table->ft.net);
-	if (!net)
-		write_pnet(&table->ft.net, xt_net(par));
 
 	dst_release(route.tuple[dir].dst);
 	dst_release(route.tuple[!dir].dst);
