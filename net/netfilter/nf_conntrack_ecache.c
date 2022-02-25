@@ -17,10 +17,10 @@
 #include <linux/stddef.h>
 #include <linux/err.h>
 #include <linux/percpu.h>
+#include <linux/kernel.h>
 #ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
 #include <linux/notifier.h>
 #endif
-#include <linux/kernel.h>
 #include <linux/netdevice.h>
 #include <linux/slab.h>
 #include <linux/export.h>
@@ -133,38 +133,6 @@ static void ecache_work(struct work_struct *work)
 		schedule_delayed_work(&cnet->ecache_dwork, delay);
 }
 
-#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-int
-nf_conntrack_eventmask_report(unsigned int eventmask,
-			      struct nf_conn *ct,
-			      u32 portid,
-			      int report)
-{
-	struct nf_conntrack_ecache *e;
-	struct net *net = nf_ct_net(ct);
-
-	e = nf_ct_ecache_find(ct);
-	if (e == NULL)
-		return 0;
-
-	if (nf_ct_is_confirmed(ct)) {
-		struct nf_ct_event item = {
-			.ct = ct,
-			.portid	= e->portid ? e->portid : portid,
-			.report = report
-		};
-		/* This is a resent of a destroy event? If so, skip missed */
-		unsigned long missed = e->portid ? 0 : e->missed;
-
-		if (!((eventmask | missed) & e->ctmask))
-			return 0;
-
-		atomic_notifier_call_chain(&net->ct.nf_conntrack_chain, eventmask | missed, &item);
-	}
-
-	return 0;
-}
-#else
 static int __nf_conntrack_eventmask_report(struct nf_conntrack_ecache *e,
 					   const unsigned int events,
 					   const unsigned long missed,
@@ -202,6 +170,35 @@ static int __nf_conntrack_eventmask_report(struct nf_conntrack_ecache *e,
 	return ret;
 }
 
+#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
+int nf_conntrack_eventmask_report(unsigned int eventmask, struct nf_conn *ct,
+				  u32 portid, int report)
+{
+	struct nf_conntrack_ecache *e;
+	struct net *net = nf_ct_net(ct);
+
+	e = nf_ct_ecache_find(ct);
+	if (e == NULL)
+		return 0;
+
+	if (nf_ct_is_confirmed(ct)) {
+		struct nf_ct_event item = {
+			.ct = ct,
+			.portid	= e->portid ? e->portid : portid,
+			.report = report
+		};
+		/* This is a resent of a destroy event? If so, skip missed */
+		unsigned long missed = e->portid ? 0 : e->missed;
+
+		if (!((eventmask | missed) & e->ctmask))
+			return 0;
+
+		atomic_notifier_call_chain(&net->ct.nf_conntrack_chain, eventmask | missed, &item);
+	}
+
+	return 0;
+}
+#else
 int nf_conntrack_eventmask_report(unsigned int events, struct nf_conn *ct,
 				  u32 portid, int report)
 {
@@ -343,22 +340,32 @@ out_unlock:
 }
 
 #ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-int nf_conntrack_register_notifier(struct net *net, struct notifier_block *nb)
+int nf_conntrack_register_notifier(struct net *net,
+				   struct notifier_block *nb)
 {
 	return atomic_notifier_chain_register(&net->ct.nf_conntrack_chain, nb);
 }
 #else
-void nf_conntrack_register_notifier(struct net *net,
+int nf_conntrack_register_notifier(struct net *net,
 				    const struct nf_ct_event_notifier *new)
 {
+	int ret;
 	struct nf_ct_event_notifier *notify;
 
 	mutex_lock(&nf_ct_ecache_mutex);
 	notify = rcu_dereference_protected(net->ct.nf_conntrack_event_cb,
 					   lockdep_is_held(&nf_ct_ecache_mutex));
 	WARN_ON_ONCE(notify);
+	if (notify != NULL) {
+		ret = -EBUSY;
+		goto out_unlock;
+	}
+
 	rcu_assign_pointer(net->ct.nf_conntrack_event_cb, new);
-	mutex_unlock(&nf_ct_ecache_mutex);
+	ret = 0;
+out_unlock:
+ 	mutex_unlock(&nf_ct_ecache_mutex);
+	return ret;
 }
 #endif
 EXPORT_SYMBOL_GPL(nf_conntrack_register_notifier);

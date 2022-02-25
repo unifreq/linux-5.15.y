@@ -87,10 +87,11 @@ struct nf_ct_event_notifier {
 extern int nf_conntrack_register_notifier(struct net *net, struct notifier_block *nb);
 extern int nf_conntrack_unregister_notifier(struct net *net, struct notifier_block *nb);
 #else
-void nf_conntrack_register_notifier(struct net *net,
+int nf_conntrack_register_notifier(struct net *net,
 				   const struct nf_ct_event_notifier *nb);
 void nf_conntrack_unregister_notifier(struct net *net);
 #endif
+
 void nf_ct_deliver_cached_events(struct nf_conn *ct);
 int nf_conntrack_eventmask_report(unsigned int eventmask, struct nf_conn *ct,
 				  u32 portid, int report);
@@ -121,7 +122,6 @@ nf_conntrack_event_cache(enum ip_conntrack_events event, struct nf_conn *ct)
 
 	if (!rcu_access_pointer(net->ct.nf_conntrack_event_cb))
 		return;
-
 #endif
 
 	e = nf_ct_ecache_find(ct);
@@ -159,7 +159,6 @@ nf_conntrack_event(enum ip_conntrack_events event, struct nf_conn *ct)
 
 	if (!rcu_access_pointer(net->ct.nf_conntrack_event_cb))
 		return 0;
-
 #endif
 
 	return nf_conntrack_eventmask_report(1 << event, ct, 0, 0);
