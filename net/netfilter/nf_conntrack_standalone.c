@@ -671,6 +671,7 @@ enum nf_ct_sysctl_index {
 	NF_SYSCTL_CT_LWTUNNEL,
 #endif
 
+	NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK,
 	__NF_SYSCTL_CT_LAST_SYSCTL,
 };
 
@@ -1026,6 +1027,13 @@ static struct ctl_table nf_ct_sysctl_table[] = {
 		.proc_handler	= nf_hooks_lwtunnel_sysctl_handler,
 	},
 #endif
+	[NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK] = {
+		.procname       = "nf_conntrack_tcp_no_window_check",
+		.data           = &init_net.ct.sysctl_no_window_check,
+		.maxlen         = sizeof(unsigned int),
+		.mode           = 0644,
+		.proc_handler   = proc_dointvec,
+	},
 	{}
 };
 
@@ -1153,6 +1161,7 @@ static int nf_conntrack_standalone_init_sysctl(struct net *net)
 #ifdef CONFIG_NF_CONNTRACK_EVENTS
 	table[NF_SYSCTL_CT_EVENTS].data = &net->ct.sysctl_events;
 #endif
+	table[NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK].data = &net->ct.sysctl_no_window_check;
 #ifdef CONFIG_NF_CONNTRACK_TIMESTAMP
 	table[NF_SYSCTL_CT_TIMESTAMP].data = &net->ct.sysctl_tstamp;
 #endif
@@ -1222,6 +1231,7 @@ static int nf_conntrack_pernet_init(struct net *net)
 	int ret;
 
 	net->ct.sysctl_checksum = 1;
+	net->ct.sysctl_no_window_check = 1;
 
 	ret = nf_conntrack_standalone_init_sysctl(net);
 	if (ret < 0)
