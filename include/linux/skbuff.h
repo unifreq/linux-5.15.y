@@ -877,6 +877,10 @@ struct sk_buff {
 #endif
 	__u8			slow_gro:1;
 
+#ifdef CONFIG_SHORTCUT_FE
+	__u8			fast_forwarded:1;
+#endif
+
 #ifdef CONFIG_NET_SCHED
 	__u16			tc_index;	/* traffic control index */
 #endif

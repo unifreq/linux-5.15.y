@@ -149,12 +149,23 @@ static int __nf_conntrack_eventmask_report(struct nf_conntrack_ecache *e,
 	rcu_read_lock();
 
 	notify = rcu_dereference(net->ct.nf_conntrack_event_cb);
-	if (!notify) {
+#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
+	if (!notify && !rcu_dereference_raw(net->ct.nf_conntrack_chain.head))
+#else
+	if (!notify) 
+#endif
+	{
 		rcu_read_unlock();
 		return 0;
 	}
-
+#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
+		ret = atomic_notifier_call_chain(&net->ct.nf_conntrack_chain,
+			events | missed, &item);
+		if (notify)
+			ret = notify->ct_event(events | missed, item);
+#else
 	ret = notify->ct_event(events | missed, item);
+#endif
 	rcu_read_unlock();
 
 	if (likely(ret >= 0 && missed == 0))
@@ -345,6 +356,11 @@ int nf_conntrack_register_notifier(struct net *net,
 {
 	return atomic_notifier_chain_register(&net->ct.nf_conntrack_chain, nb);
 }
+int nf_conntrack_register_chain_notifier(struct net *net, struct notifier_block *nb)
+{
+	return atomic_notifier_chain_register(&net->ct.nf_conntrack_chain, nb);
+}
+EXPORT_SYMBOL_GPL(nf_conntrack_register_chain_notifier);
 #else
 int nf_conntrack_register_notifier(struct net *net,
 				    const struct nf_ct_event_notifier *new)
@@ -375,6 +391,11 @@ int nf_conntrack_unregister_notifier(struct net *net, struct notifier_block *nb)
 {
 	return atomic_notifier_chain_unregister(&net->ct.nf_conntrack_chain, nb);
 }
+int nf_conntrack_unregister_chain_notifier(struct net *net, struct notifier_block *nb)
+{
+	return atomic_notifier_chain_unregister(&net->ct.nf_conntrack_chain, nb);
+}
+EXPORT_SYMBOL_GPL(nf_conntrack_unregister_chain_notifier);
 #else
 void nf_conntrack_unregister_notifier(struct net *net)
 {
