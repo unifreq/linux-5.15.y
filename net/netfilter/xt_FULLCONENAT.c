@@ -313,7 +313,7 @@ static uint16_t find_appropriate_port6(struct net *net, const u16 zone, const ui
 
   if (range->flags & NF_NAT_RANGE_PROTO_SPECIFIED) {
     min = be16_to_cpu((range->min_proto).udp.port);
-    range_size = be16_to_cpu((range->min_proto).udp.port) - min + 1;
+    range_size = be16_to_cpu((range->max_proto).udp.port) - min + 1;
   } else {
     /* minimum port is 1024. same behavior as default linux NAT. */
     min = 1024;
@@ -1258,8 +1258,7 @@ static int fullconenat_tg_check(const struct xt_tgchk_param *par)
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) && !defined(CONFIG_NF_CONNTRACK_CHAIN_EVENTS)
-    nf_conntrack_register_notifier(par->net, &ct_event_notifier);
-    if (true) {
+    if (!READ_ONCE(par->net->ct.nf_conntrack_event_cb)&&(nf_conntrack_register_notifier(par->net, &ct_event_notifier)==0)) {
 #else
     if (nf_conntrack_register_notifier(par->net, &ct_event_notifier) == 0) {
 #endif
@@ -1348,7 +1347,7 @@ static int __init fullconenat_tg_init(void)
   ret = nf_nat_masquerade_inet_register_notifiers();
   if (unlikely(ret))
     return ret;
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0)
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0)
   ret = nf_nat_masquerade_ipv4_register_notifier();
   if (unlikely(ret))
     return ret;
@@ -1358,6 +1357,11 @@ static int __init fullconenat_tg_init(void)
     nf_nat_masquerade_ipv4_unregister_notifier();
     return ret;
   }
+#endif
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0)
+  nf_nat_masquerade_ipv4_register_notifier();
+#if IS_ENABLED(CONFIG_NF_NAT_MASQUERADE_IPV6)
+  nf_nat_masquerade_ipv6_register_notifier();
 #endif
 #else
 #if IS_MODULE(CONFIG_IP_NF_TARGET_MASQUERADE)
