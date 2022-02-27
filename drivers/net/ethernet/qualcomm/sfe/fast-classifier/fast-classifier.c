@@ -320,7 +320,9 @@ static bool fast_classifier_find_dev_and_mac_addr(struct sk_buff *skb, sfe_ip_ad
 {
 	struct neighbour *neigh;
 	struct rtable *rt;
+#ifdef SFE_SUPPORT_IPV6
 	struct rt6_info *rt6;
+#endif
 	struct dst_entry *dst;
 	struct net_device *mac_dev;
 

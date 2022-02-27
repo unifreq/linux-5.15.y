@@ -692,6 +692,7 @@ sfe_cm_ipv4_post_routing_hook(hooknum, ops, skb, in_unused, out, okfn)
 	return sfe_cm_post_routing(skb, true);
 }
 
+#ifdef SFE_SUPPORT_IPV6
 /*
  * sfe_cm_ipv6_post_routing_hook()
  *	Called for packets about to leave the box - either locally generated or forwarded from another interface
@@ -700,6 +701,7 @@ sfe_cm_ipv6_post_routing_hook(hooknum, ops, skb, in_unused, out, okfn)
 {
 	return sfe_cm_post_routing(skb, false);
 }
+#endif
 
 #ifdef CONFIG_NF_CONNTRACK_EVENTS
 /*
