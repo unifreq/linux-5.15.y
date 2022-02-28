@@ -8,3 +8,4 @@ ifeq ($(CONFIG_SFE_SUPPORT_IPV6),y)
 endif
 
 ccflags-y += -I$(obj)/../shortcut-fe
+ccflags-y += -Werror -Wall
