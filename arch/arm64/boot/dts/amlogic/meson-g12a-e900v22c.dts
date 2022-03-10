@@ -35,6 +35,36 @@
 		clocks = <&wifi32k>;
 		clock-names = "ext_clock";
 	};
+
+	leds {
+		compatible = "gpio-leds";
+		
+		power_led {
+			led_name = "power_led";
+                        gpios = <&gpio_ao GPIOAO_11 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+
+		net_led {
+			led_name = "net_led";
+                        gpios = <&gpio_ao GPIOAO_9 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+			linux,default-trigger = "0.0:00:link";
+		};
+
+		remote_led {
+			led_name = "remote_led";
+                        gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+			linux,default-trigger = "rc-feedback";
+		};
+
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
 };
 
 &mali {

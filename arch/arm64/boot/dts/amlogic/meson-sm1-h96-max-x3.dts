@@ -8,6 +8,7 @@
 /dts-v1/;
 
 #include "meson-sm1-ac2xx.dtsi"
+#include <dt-bindings/leds/common.h>
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 
 / {
@@ -78,6 +79,73 @@
 		regulator-max-microvolt = <800000>;
 		vin-supply = <&ao_5v>;
 		regulator-always-on;
+	};
+
+	openvfd {
+		compatible = "open,vfd";
+		dev_name = "openvfd";
+                status = "okay";
+        };
+
+	spi {
+		compatible = "spi-gpio";
+		sck-gpios = <&gpio GPIOA_15 GPIO_ACTIVE_HIGH>;
+		mosi-gpios = <&gpio GPIOA_14 GPIO_ACTIVE_HIGH>;
+		//cs-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_LOW>;
+		cs-gpios = <&gpio_ao GPIOAO_11 GPIO_ACTIVE_LOW>;
+		num-chipselects = <1>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+
+		tm1628: led-controller@0 {
+			compatible = "titanmec,tm1628";
+			reg = <0>;
+			spi-3wire;
+			//spi-lsb-first;
+			spi-rx-delay-us = <1>;
+			spi-max-frequency = <500000>;
+			#address-cells = <2>;
+			#size-cells = <0>;
+
+			titanmec,grid = /bits/ 8 <4 3 2 1>;
+			titanmec,segment-mapping = /bits/ 8 <4 5 6 1 2 3 7>;
+
+			alarm@5,1 {
+				reg = <5 1>;
+				function = LED_FUNCTION_ALARM;
+			};
+
+			usb@5,2 {
+				reg = <5 2>;
+				function = LED_FUNCTION_USB;
+			};
+
+			play@5,3 {
+				reg = <5 3>;
+				function = "play";
+			};
+
+			pause@5,4 {
+				reg = <5 4>;
+				function = "pause";
+			};
+
+			colon@5,5 {
+				reg = <5 5>;
+				function = "colon";
+			};
+
+			lan@5,6 {
+				reg = <5 6>;
+				function = LED_FUNCTION_LAN;
+			};
+
+			wlan@5,7 {
+				reg = <5 7>;
+				function = LED_FUNCTION_WLAN;
+			};
+		};
 	};
 };
 
