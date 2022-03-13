@@ -5,10 +5,10 @@
 
 /dts-v1/;
 
-#include "meson-sm1-tx3.dts"
+#include "meson-sm1-tx3-bz.dts"
 
 / {
-	model = "Tanix TX3 @ 2208Mhz";
+	model = "Tanix TX3 (BZ) @ 2208Mhz";
 };
 
 &cpu_opp_table {

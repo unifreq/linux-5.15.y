@@ -2,23 +2,37 @@
 /*
  * Copyright (c) 2019 BayLibre SAS. All rights reserved.
  * Copyright (c) 2020 Christian Hewitt <christianshewitt@gmail.com>
- * Copyright (c) 2021 flippy <uniqfreq@gmail.com>
+ * Copyright (c) 2022 flippy <uniqfreq@gmail.com>
  */
 
 /dts-v1/;
 
 #include "meson-sm1-ac2xx.dtsi"
+#include <dt-bindings/leds/common.h>
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 
 / {
-	//compatible = "amediatech,x96-max-plus", "amlogic,sm1";
-	//model = "Shenzhen Amediatech Technology Co., Ltd X96 Max+";
-	compatible = "amlogic,sm1";
-	model = "HK1 Box/Vontar X3";
+	compatible = "tanix,tx3-qz", "amlogic,sm1";
+	model = "Tanix TX3 (QZ)";
+
+	leds {
+		compatible = "gpio-leds";
+		
+		sys_led {
+			led_name = "sys_led";
+                        gpios = <&gpio_ao GPIOAO_11 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
 
 	sound {
 		compatible = "amlogic,axg-sound-card";
-		model = "HK1-BOX";
+		model = "TX3";
 		audio-aux-devs = <&tdmout_b>;
 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
@@ -83,8 +97,8 @@
 	openvfd {
 		compatible = "open,vfd";
 		dev_name = "openvfd";
-		status = "okay";
-	};
+                status = "okay";
+        };
 };
 
 &vddcpu {
@@ -192,6 +206,7 @@
 
 /* SDIO */
 &sd_emmc_a {
+	/delete-property/ sd-uhs-sdr104;
 	sd-uhs-sdr50;
 	max-frequency = <100000000>;
 
@@ -204,8 +219,7 @@
 
 /* SD card */
 &sd_emmc_b {
-	cap-sd-highspeed;
-	max-frequency = <25000000>;
+	max-frequency = <50000000>;
 };
 
 /* eMMC */
