@@ -79,6 +79,12 @@
 		vin-supply = <&ao_5v>;
 		regulator-always-on;
 	};
+
+	openvfd {
+		compatible = "open,vfd";
+		dev_name = "openvfd";
+		status = "okay";
+	};
 };
 
 &vddcpu {
