@@ -196,6 +196,9 @@
 
 /* SDIO */
 &sd_emmc_a {
+	/delete-property/ sd-uhs-sdr104;
+	sd-uhs-sdr12;
+	sd-uhs-sdr25;
 	sd-uhs-sdr50;
 	max-frequency = <100000000>;
 

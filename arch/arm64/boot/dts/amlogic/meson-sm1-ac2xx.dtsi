@@ -235,6 +235,7 @@
 
 	bus-width = <4>;
 	cap-sd-highspeed;
+	cap-mmc-highspeed;
 	sd-uhs-sdr104;
 	max-frequency = <200000000>;
 

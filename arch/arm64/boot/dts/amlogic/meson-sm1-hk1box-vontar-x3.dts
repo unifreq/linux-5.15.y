@@ -11,8 +11,6 @@
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 
 / {
-	//compatible = "amediatech,x96-max-plus", "amlogic,sm1";
-	//model = "Shenzhen Amediatech Technology Co., Ltd X96 Max+";
 	compatible = "amlogic,sm1";
 	model = "HK1 Box/Vontar X3";
 
@@ -192,6 +190,9 @@
 
 /* SDIO */
 &sd_emmc_a {
+	/delete-property/ sd-uhs-sdr104;
+	sd-uhs-sdr12;
+	sd-uhs-sdr25;
 	sd-uhs-sdr50;
 	max-frequency = <100000000>;
 
