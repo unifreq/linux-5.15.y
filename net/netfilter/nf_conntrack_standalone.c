@@ -1030,11 +1030,9 @@ static struct ctl_table nf_ct_sysctl_table[] = {
 	[NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK] = {
 		.procname       = "nf_conntrack_tcp_no_window_check",
 		.data           = &init_net.ct.sysctl_no_window_check,
-		.maxlen         = sizeof(u8),
+		.maxlen         = sizeof(unsigned int),
 		.mode           = 0644,
-		.proc_handler	= proc_dou8vec_minmax,
-		.extra1 	= SYSCTL_ZERO,
-		.extra2 	= SYSCTL_ONE,
+		.proc_handler   = proc_dointvec,
 	},
 	{}
 };
