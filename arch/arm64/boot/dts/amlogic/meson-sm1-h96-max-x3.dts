@@ -253,16 +253,14 @@
 /* SDIO */
 &sd_emmc_a {
 	///delete-property/ sd-uhs-sdr104;
-	//sd-uhs-sdr12;
-	//sd-uhs-sdr25;
-	//sd-uhs-sdr50;
-	//max-frequency = <100000000>;
+	sd-uhs-sdr50;
+	max-frequency = <100000000>;
 
         //sd-uhs-ddr50;
 	//max-frequency = <50000000>;
 
-	sd-uhs-sdr104;
-	max-frequency = <200000000>;
+	//sd-uhs-sdr104;
+	//max-frequency = <200000000>;
 };
 
 /* Begin: fix hcy6355 wifi module problem */
