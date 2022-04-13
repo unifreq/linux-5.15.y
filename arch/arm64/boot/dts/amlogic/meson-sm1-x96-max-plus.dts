@@ -183,6 +183,7 @@
 		clock-names = "lpo";
 		vbat-supply = <&vddao_3v3>;
 		vddio-supply = <&vddio_ao1v8>;
+		status = "disabled";
 	};
 };
 
