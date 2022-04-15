@@ -46,27 +46,55 @@ static struct interface *alloc_iface(char *ifname);
 
 static inline void ksmbd_tcp_nodelay(struct socket *sock)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
+	int val = 1;
+
+	kernel_setsockopt(sock, SOL_TCP, TCP_NODELAY, (char *)&val,
+			  sizeof(val));
+#else
 	tcp_sock_set_nodelay(sock->sk);
+#endif
 }
 
 static inline void ksmbd_tcp_reuseaddr(struct socket *sock)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
+	int val = 1;
+
+	kernel_setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&val,
+			  sizeof(val));
+#else
 	sock_set_reuseaddr(sock->sk);
+#endif
 }
 
 static inline void ksmbd_tcp_rcv_timeout(struct socket *sock, s64 secs)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
+	struct __kernel_old_timeval tv = { .tv_sec = secs, .tv_usec = 0 };
+
+	kernel_setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO_OLD, (char *)&tv,
+			  sizeof(tv));
+#else
 	lock_sock(sock->sk);
 	if (secs && secs < MAX_SCHEDULE_TIMEOUT / HZ - 1)
 		sock->sk->sk_rcvtimeo = secs * HZ;
 	else
 		sock->sk->sk_rcvtimeo = MAX_SCHEDULE_TIMEOUT;
 	release_sock(sock->sk);
+#endif
 }
 
 static inline void ksmbd_tcp_snd_timeout(struct socket *sock, s64 secs)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
+	struct __kernel_old_timeval tv = { .tv_sec = secs, .tv_usec = 0 };
+
+	kernel_setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO_OLD, (char *)&tv,
+			  sizeof(tv));
+#else
 	sock_set_sndtimeo(sock->sk, secs);
+#endif
 }
 
 static struct tcp_transport *alloc_transport(struct socket *client_sk)
@@ -189,12 +217,12 @@ static int ksmbd_tcp_new_connection(struct socket *client_sk)
 		return -ENOMEM;
 
 	csin = KSMBD_TCP_PEER_SOCKADDR(KSMBD_TRANS(t)->conn);
+
 	if (kernel_getpeername(client_sk, csin) < 0) {
 		pr_err("client ip resolution failed\n");
 		rc = -EINVAL;
 		goto out_error;
 	}
-
 	KSMBD_TRANS(t)->handler = kthread_run(ksmbd_conn_handler_loop,
 					      KSMBD_TRANS(t)->conn,
 					      "ksmbd:%u",
@@ -420,11 +448,23 @@ static int create_socket(struct interface *iface)
 	ksmbd_tcp_nodelay(ksmbd_socket);
 	ksmbd_tcp_reuseaddr(ksmbd_socket);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
+	ret = kernel_setsockopt(ksmbd_socket,
+				SOL_SOCKET,
+				SO_BINDTODEVICE,
+				iface->name,
+				strlen(iface->name));
+#else
 	ret = sock_setsockopt(ksmbd_socket,
 			      SOL_SOCKET,
 			      SO_BINDTODEVICE,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0)
+			      (char __user *)iface->name,
+#else
 			      KERNEL_SOCKPTR(iface->name),
+#endif
 			      strlen(iface->name));
+#endif
 	if (ret != -ENODEV && ret < 0) {
 		pr_err("Failed to set SO_BINDTODEVICE: %d\n", ret);
 		goto out_error;

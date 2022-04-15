@@ -154,9 +154,17 @@ void ksmbd_session_destroy(struct ksmbd_session *sess)
 
 	list_del(&sess->sessions_entry);
 
+#ifdef CONFIG_SMB_INSECURE_SERVER
+	if (IS_SMB2(sess->conn)) {
+		down_write(&sessions_table_lock);
+		hash_del(&sess->hlist);
+		up_write(&sessions_table_lock);
+	}
+#else
 	down_write(&sessions_table_lock);
 	hash_del(&sess->hlist);
 	up_write(&sessions_table_lock);
+#endif
 
 	if (sess->user)
 		ksmbd_free_user(sess->user);
@@ -291,6 +299,18 @@ struct preauth_session *ksmbd_preauth_session_lookup(struct ksmbd_conn *conn,
 	return NULL;
 }
 
+#ifdef CONFIG_SMB_INSECURE_SERVER
+static int __init_smb1_session(struct ksmbd_session *sess)
+{
+	int id = ksmbd_acquire_smb1_uid(&session_ida);
+
+	if (id < 0)
+		return -EINVAL;
+	sess->id = id;
+	return 0;
+}
+#endif
+
 static int __init_smb2_session(struct ksmbd_session *sess)
 {
 	int id = ksmbd_acquire_smb2_uid(&session_ida);
@@ -322,6 +342,11 @@ static struct ksmbd_session *__session_create(int protocol)
 	atomic_set(&sess->refcnt, 1);
 
 	switch (protocol) {
+#ifdef CONFIG_SMB_INSECURE_SERVER
+	case CIFDS_SESSION_FLAG_SMB1:
+		ret = __init_smb1_session(sess);
+		break;
+#endif
 	case CIFDS_SESSION_FLAG_SMB2:
 		ret = __init_smb2_session(sess);
 		break;
@@ -347,6 +372,13 @@ error:
 	return NULL;
 }
 
+#ifdef CONFIG_SMB_INSECURE_SERVER
+struct ksmbd_session *ksmbd_smb1_session_create(void)
+{
+	return __session_create(CIFDS_SESSION_FLAG_SMB1);
+}
+#endif
+
 struct ksmbd_session *ksmbd_smb2_session_create(void)
 {
 	return __session_create(CIFDS_SESSION_FLAG_SMB2);
@@ -356,6 +388,10 @@ int ksmbd_acquire_tree_conn_id(struct ksmbd_session *sess)
 {
 	int id = -EINVAL;
 
+#ifdef CONFIG_SMB_INSECURE_SERVER
+	if (test_session_flag(sess, CIFDS_SESSION_FLAG_SMB1))
+		id = ksmbd_acquire_smb1_tid(&sess->tree_conn_ida);
+#endif
 	if (test_session_flag(sess, CIFDS_SESSION_FLAG_SMB2))
 		id = ksmbd_acquire_smb2_tid(&sess->tree_conn_ida);
 

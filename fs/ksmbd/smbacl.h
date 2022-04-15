@@ -8,6 +8,7 @@
 #ifndef _SMBACL_H
 #define _SMBACL_H
 
+#include <linux/version.h>
 #include <linux/fs.h>
 #include <linux/namei.h>
 #include <linux/posix_acl.h>
@@ -213,6 +214,7 @@ void ksmbd_init_domain(u32 *sub_auth);
 static inline uid_t posix_acl_uid_translate(struct user_namespace *mnt_userns,
 					    struct posix_acl_entry *pace)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 	kuid_t kuid;
 
 	/* If this is an idmapped mount, apply the idmapping. */
@@ -220,11 +222,15 @@ static inline uid_t posix_acl_uid_translate(struct user_namespace *mnt_userns,
 
 	/* Translate the kuid into a userspace id ksmbd would see. */
 	return from_kuid(&init_user_ns, kuid);
+#else
+	return from_kuid(&init_user_ns, pace->e_uid);
+#endif
 }
 
 static inline gid_t posix_acl_gid_translate(struct user_namespace *mnt_userns,
 					    struct posix_acl_entry *pace)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 	kgid_t kgid;
 
 	/* If this is an idmapped mount, apply the idmapping. */
@@ -232,6 +238,9 @@ static inline gid_t posix_acl_gid_translate(struct user_namespace *mnt_userns,
 
 	/* Translate the kgid into a userspace id ksmbd would see. */
 	return from_kgid(&init_user_ns, kgid);
+#else
+	return from_kgid(&init_user_ns, pace->e_gid);
+#endif
 }
 
 #endif /* _SMBACL_H */

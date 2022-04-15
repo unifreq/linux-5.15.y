@@ -269,6 +269,9 @@ static int sid_to_id(struct user_namespace *user_ns,
 		return -EIO;
 	}
 
+	if (!compare_sids(psid, &sid_everyone))
+		return -EIO;
+
 	if (sidtype == SIDOWNER) {
 		kuid_t uid;
 		uid_t id;
@@ -280,8 +283,10 @@ static int sid_to_id(struct user_namespace *user_ns,
 		 */
 		uid = make_kuid(&init_user_ns, id);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 		/* If this is an idmapped mount, apply the idmapping. */
 		uid = kuid_from_mnt(user_ns, uid);
+#endif
 		if (uid_valid(uid)) {
 			fattr->cf_uid = uid;
 			rc = 0;
@@ -297,8 +302,10 @@ static int sid_to_id(struct user_namespace *user_ns,
 		 */
 		gid = make_kgid(&init_user_ns, id);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 		/* If this is an idmapped mount, apply the idmapping. */
 		gid = kgid_from_mnt(user_ns, gid);
+#endif
 		if (gid_valid(gid)) {
 			fattr->cf_gid = gid;
 			rc = 0;
@@ -1341,6 +1348,7 @@ int set_info_sec(struct ksmbd_conn *conn, struct ksmbd_tree_connect *tcon,
 		newattrs.ia_uid = fattr.cf_uid;
 	}
 	if (!gid_eq(fattr.cf_gid, INVALID_GID)) {
+		inode->i_gid = fattr.cf_gid;
 		newattrs.ia_valid |= ATTR_GID;
 		newattrs.ia_gid = fattr.cf_gid;
 	}
@@ -1350,15 +1358,25 @@ int set_info_sec(struct ksmbd_conn *conn, struct ksmbd_tree_connect *tcon,
 	ksmbd_vfs_remove_acl_xattrs(user_ns, path->dentry);
 	/* Update posix acls */
 	if (IS_ENABLED(CONFIG_FS_POSIX_ACL) && fattr.cf_dacls) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 		rc = set_posix_acl(user_ns, inode,
-				   ACL_TYPE_ACCESS, fattr.cf_acls);
+				   ACL_TYPE_ACCESS,
+				   fattr.cf_acls);
+#else
+		rc = set_posix_acl(inode, ACL_TYPE_ACCESS, fattr.cf_acls);
+#endif
 		if (rc < 0)
 			ksmbd_debug(SMB,
 				    "Set posix acl(ACL_TYPE_ACCESS) failed, rc : %d\n",
 				    rc);
 		if (S_ISDIR(inode->i_mode) && fattr.cf_dacls) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 			rc = set_posix_acl(user_ns, inode,
 					   ACL_TYPE_DEFAULT, fattr.cf_dacls);
+#else
+			rc = set_posix_acl(inode, ACL_TYPE_DEFAULT,
+					   fattr.cf_dacls);
+#endif
 			if (rc)
 				ksmbd_debug(SMB,
 					    "Set posix acl(ACL_TYPE_DEFAULT) failed, rc : %d\n",
@@ -1367,7 +1385,11 @@ int set_info_sec(struct ksmbd_conn *conn, struct ksmbd_tree_connect *tcon,
 	}
 
 	inode_lock(inode);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
 	rc = notify_change(user_ns, path->dentry, &newattrs, NULL);
+#else
+	rc = notify_change(path->dentry, &newattrs, NULL);
+#endif
 	inode_unlock(inode);
 	if (rc)
 		goto out;
