@@ -12,6 +12,10 @@
 	//model = "Shenzhen Amediatech Technology Co., Ltd X96 Max";
 	model = "X96 Max (RMII)";
 
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
 };
 
 &ext_mdio {

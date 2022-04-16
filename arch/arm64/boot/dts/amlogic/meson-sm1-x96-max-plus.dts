@@ -16,6 +16,11 @@
 	compatible = "amlogic,sm1";
 	model = "AMedia X96 Max+";
 
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0xFFFFFFFF>;
+	};
+
 	sound {
 		compatible = "amlogic,axg-sound-card";
 		model = "X96-MAX";
