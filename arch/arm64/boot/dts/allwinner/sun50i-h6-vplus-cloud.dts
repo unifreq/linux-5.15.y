@@ -89,18 +89,6 @@
 		startup-delay-us = <100000>;
 		enable-active-high;
 	};
-
-	reg_ephy_gpio_3v3: ephy-gpio-3v3 {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc-ephy-gpio-3v3";
-
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		startup-delay-us = <100000>;
-
-		gpio = <&pio 3 14 GPIO_ACTIVE_HIGH>; /* PD14 */
-		enable-active-high;
-	};
 };
 
 &cpu0 {
@@ -135,11 +123,11 @@
 &emac {
 	pinctrl-names = "default";
 	pinctrl-0 = <&ext_rgmii_pins>;
+
 	phy-mode = "rgmii";
 	phy-handle = <&ext_rgmii_phy>;
 
-	phy-supply = <&reg_ephy_gpio_3v3>;
-	phy-io-supply = <&reg_aldo2>;
+	phy-supply = <&reg_aldo2>;
 
 	allwinner,rx-delay-ps = <900>;
 	allwinner,tx-delay-ps = <600>;
@@ -147,18 +135,15 @@
 	status = "okay";
 };
 
-
 &mdio {
-
 	ext_rgmii_phy: ethernet-phy@1 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
-		
-		//pinctrl-0 = <&phyrstb_pins>;
-		//pinctrl-names = "default";
-		//reset-gpios = <&pio 3 14 GPIO_ACTIVE_LOW>; /* PD14 */
-		//reset-assert-us = <15000>;
-		//reset-deassert-us = <45000>;
+		max-speed = <1000>;
+	
+		reset-assert-us = <15000>;
+		reset-deassert-us = <50000>;
+		reset-gpios = <&pio 3 14 GPIO_ACTIVE_LOW>; /* PD14 */
 	};
 };
 
@@ -204,14 +189,6 @@
 	vcc-pd-supply = <&reg_cldo1>;
 	vcc-pg-supply = <&reg_cldo3>;
 	vcc-ph-supply = <&reg_cldo1>;
-
-	//phyrstb_pins: phyrstb-pins {
-	//	pins = "PD14";
-	//	function = "gpio_out";
-	//	drive-strength = <30>;
-	//	bias-pull-up;
-	//};
-
 };
 
 &r_pio {
@@ -255,10 +232,9 @@
 			};
 
 			reg_aldo2: aldo2 {
-				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
-				regulator-name = "vcc-ephy-ldo-3v3";
+				regulator-name = "vcc-tv-ldoin-ephy-mac";
 				regulator-enable-ramp-delay = <100000>;
 			};
 
@@ -369,17 +345,11 @@
 };
 
 &usb2otg {
-	/*
-	 * This board doesn't have a controllable VBUS even though it
-	 * does have an ID pin. Using it as anything but a USB host is
-	 * unsafe.
-	 */
-	dr_mode = "host";
+	dr_mode = "otg";
 	status = "okay";
 };
 
 &usb2phy {
-	//usb0_id_det-gpios = <&pio 2 15 GPIO_ACTIVE_HIGH>; /* PC15 */
 	usb0_id_det-gpios = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
 	usb0_vbus-supply = <&reg_vcc5v>;
 	status = "okay";
@@ -407,11 +377,11 @@
 	};
 };
 
+/*
 &ac200_pwm_clk {
 	status = "okay";
 };
 
-/*
 &pwm {
 	status = "okay";
 };
