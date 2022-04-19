@@ -185,6 +185,7 @@
 };
 
 &pio {
+	vcc-pb-supply = <&reg_cldo1>;
 	vcc-pc-supply = <&reg_bldo2>;
 	vcc-pd-supply = <&reg_cldo1>;
 	vcc-pg-supply = <&reg_cldo3>;
