@@ -89,6 +89,18 @@
 		startup-delay-us = <100000>;
 		enable-active-high;
 	};
+
+	reg_ephy_gpio_3v3: ephy-gpio-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-ephy-gpio-3v3";
+
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		startup-delay-us = <100000>;
+
+		gpio = <&pio 3 14 GPIO_ACTIVE_HIGH>; /* PD14 */
+		enable-active-high;
+	};
 };
 
 &cpu0 {
@@ -127,7 +139,14 @@
 	phy-mode = "rgmii";
 	phy-handle = <&ext_rgmii_phy>;
 
-	phy-supply = <&reg_aldo2>;
+	/* 
+	 * The external ethernet phy is powered by reg_aldo2,
+	 * This is the real situation, but for individual 
+	 * boxes it can cause the network to not work, 
+	 * so a workaround has to be used.
+	 * phy-supply = <&reg_aldo2>;
+	 */
+	phy-supply = <&reg_ephy_gpio_3v3>;
 
 	allwinner,rx-delay-ps = <900>;
 	allwinner,tx-delay-ps = <600>;
@@ -139,11 +158,10 @@
 	ext_rgmii_phy: ethernet-phy@1 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
-		max-speed = <1000>;
-	
-		reset-assert-us = <15000>;
-		reset-deassert-us = <50000>;
-		reset-gpios = <&pio 3 14 GPIO_ACTIVE_LOW>; /* PD14 */
+		//max-speed = <1000>;
+		//reset-assert-us = <15000>;
+		//reset-deassert-us = <50000>;
+		//reset-gpios = <&pio 3 14 GPIO_ACTIVE_LOW>; /* PD14 */
 	};
 };
 
@@ -233,6 +251,7 @@
 			};
 
 			reg_aldo2: aldo2 {
+				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-name = "vcc-tv-ldoin-ephy-mac";
@@ -240,6 +259,7 @@
 			};
 
 			reg_aldo3: aldo3 {
+				/* unused */
 				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
@@ -261,6 +281,7 @@
 			};
 
 			reg_bldo3: bldo3 {
+				/* unused */
 				regulator-always-on;
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
@@ -280,16 +301,15 @@
 
 			reg_cldo2: cldo2 {
 				/* unused */
-				//regulator-always-on;
+				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-name = "vcc-wifi-1";
-				status = "disabled";
 				
 			};
 
 			reg_cldo3: cldo3 {
-				/* VCC-PG */
+				/* VCC-PG-PM */
 				regulator-always-on;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
@@ -353,6 +373,7 @@
 &usb2phy {
 	usb0_id_det-gpios = <&pio 7 4 GPIO_ACTIVE_HIGH>; /* PH4 */
 	usb0_vbus-supply = <&reg_vcc5v>;
+	usb3_vbus-supply = <&reg_usb_vbus>;
 	status = "okay";
 };
 
@@ -377,29 +398,3 @@
 		status = "okay";
 	};
 };
-
-/*
-&ac200_pwm_clk {
-	status = "okay";
-};
-
-&pwm {
-	status = "okay";
-};
-
-&i2c0 {
-	status = "okay";
-};
-
-&i2c1 {
-	status = "okay";
-};
-
-&i2c2 {
-	status = "okay";
-};
-
-&i2c3 {
-	status = "okay";
-};
-*/
