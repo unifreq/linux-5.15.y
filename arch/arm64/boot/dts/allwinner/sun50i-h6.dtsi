@@ -532,8 +532,7 @@
 		};
 
 		mmc2: mmc@4022000 {
-			compatible = "allwinner,sun50i-h6-emmc",
-				     "allwinner,sun50i-a64-emmc";
+			compatible = "allwinner,sun50i-h6-emmc";
 			reg = <0x04022000 0x1000>;
 			clocks = <&ccu CLK_BUS_MMC2>, <&ccu CLK_MMC2>;
 			clock-names = "ahb", "mmc";
