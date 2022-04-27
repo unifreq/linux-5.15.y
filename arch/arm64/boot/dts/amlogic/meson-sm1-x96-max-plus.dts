@@ -177,7 +177,7 @@
 	pinctrl-names = "default";
 	uart-has-rtscts;
 
-	bluetooth {
+	bluetooth: bluetooth {
 		compatible = "realtek,rtl8822cs-bt";
 		interrupt-parent = <&gpio_intc>;
 		interrupts = <95 IRQ_TYPE_LEVEL_HIGH>;

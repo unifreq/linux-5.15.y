@@ -34,3 +34,11 @@
 		interrupts = <26 IRQ_TYPE_LEVEL_LOW>;
 	};
 };
+
+&bluetooth {
+	/* AM7256 module is based on broadcom brcm4354-sdio, 
+	 * so maybe bluetooth is available.
+	 */
+	compatible = "brcm,bcm43438-bt";
+	status = "okay";
+};
