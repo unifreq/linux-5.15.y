@@ -436,35 +436,3 @@ int jlsemi_get_bit(struct phy_device *phydev,
 
 	return __jlsemi_restore_page(phydev, oldpage, ret);
 }
-
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0))
-int jlsemi_drivers_register(struct phy_driver *phydrvs, int size)
-{
-	int i, j;
-	int ret;
-
-	for (i = 0; i < size; i++) {
-		ret = phy_driver_register(&phydrvs[i]);
-		if (ret)
-			goto err;
-	}
-
-	return 0;
-
-err:
-	for (j = 0; j < i; j++)
-		phy_driver_unregister(&phydrvs[j]);
-
-	return ret;
-}
-
-void jlsemi_drivers_unregister(struct phy_driver *phydrvs, int size)
-{
-	int i;
-
-	for (i = 0; i < size; i++) {
-		phy_driver_unregister(&phydrvs[i]);
-	}
-}
-#else
-#endif
