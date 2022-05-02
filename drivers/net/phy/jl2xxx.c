@@ -92,6 +92,17 @@ static int jlsemi_set_wol(struct phy_device *phydev,
 
 static struct phy_driver jlsemi_driver[] = {
 	{
+		PHY_ID_MATCH_EXACT(JL2101_PHY_ID),
+        	.name           = "JL2101 Gigabit Ethernet",
+        	/* PHY_BASIC_FEATURES */
+		.features	= PHY_GBIT_FEATURES,
+		.probe		= jlsemi_probe,
+		#if JLSEMI_WOL_EN
+		.get_wol	= jlsemi_get_wol,
+		.set_wol	= jlsemi_set_wol,
+		#endif
+	},
+	{
 		PHY_ID_MATCH_MODEL(JL2XX1_PHY_ID),
         	.name           = "JL2xx1 Gigabit Ethernet",
         	/* PHY_BASIC_FEATURES */
@@ -107,6 +118,7 @@ static struct phy_driver jlsemi_driver[] = {
 module_phy_driver(jlsemi_driver);
 
 static struct mdio_device_id __maybe_unused jlsemi_tbl[] = {
+        { PHY_ID_MATCH_EXACT(JL2101_PHY_ID) },
         { PHY_ID_MATCH_MODEL(JL2XX1_PHY_ID) },
         { }
 };

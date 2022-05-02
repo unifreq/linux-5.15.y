@@ -18,8 +18,10 @@
 #include <linux/version.h>
 #include <linux/kernel.h>
 
-#define JL2XX1_PHY_ID		0x937c4032
+#define JL2XX1_PHY_ID		0x937c4030
 #define JLSEMI_PHY_ID_MASK	0xfffffff0
+
+#define JL2101_PHY_ID		0x937c4032
 
 #define MII_JLSEMI_PHY_PAGE	0x1f
 
