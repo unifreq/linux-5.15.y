@@ -109,13 +109,9 @@ struct netns_ct {
 	u8			sysctl_auto_assign_helper;
 	u8			sysctl_tstamp;
 	u8			sysctl_checksum;
-	u8			sysctl_no_window_check;
 
 	struct ct_pcpu __percpu *pcpu_lists;
 	struct ip_conntrack_stat __percpu *stat;
-#ifdef CONFIG_NF_CONNTRACK_CHAIN_EVENTS
-	struct atomic_notifier_head nf_conntrack_chain;
-#endif
 	struct nf_ct_event_notifier __rcu *nf_conntrack_event_cb;
 	struct nf_ip_net	nf_ct_proto;
 #if defined(CONFIG_NF_CONNTRACK_LABELS)

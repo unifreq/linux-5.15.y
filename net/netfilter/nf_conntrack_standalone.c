@@ -9,7 +9,6 @@
 #include <linux/percpu.h>
 #include <linux/netdevice.h>
 #include <linux/security.h>
-#include <linux/inet.h>
 #include <net/net_namespace.h>
 #ifdef CONFIG_SYSCTL
 #include <linux/sysctl.h>
@@ -463,56 +462,6 @@ static int ct_cpu_seq_show(struct seq_file *seq, void *v)
 	return 0;
 }
 
-struct kill_request {
-	u16 family;
-	union nf_inet_addr addr;
-};
-
-static int kill_matching(struct nf_conn *i, void *data)
-{
-	struct kill_request *kr = data;
-	struct nf_conntrack_tuple *t1 = &i->tuplehash[IP_CT_DIR_ORIGINAL].tuple;
-	struct nf_conntrack_tuple *t2 = &i->tuplehash[IP_CT_DIR_REPLY].tuple;
-
-	if (!kr->family)
-		return 1;
-
-	if (t1->src.l3num != kr->family)
-		return 0;
-
-	return (nf_inet_addr_cmp(&kr->addr, &t1->src.u3) ||
-	        nf_inet_addr_cmp(&kr->addr, &t1->dst.u3) ||
-	        nf_inet_addr_cmp(&kr->addr, &t2->src.u3) ||
-	        nf_inet_addr_cmp(&kr->addr, &t2->dst.u3));
-}
-
-static int ct_file_write(struct file *file, char *buf, size_t count)
-{
-	struct seq_file *seq = file->private_data;
-	struct net *net = seq_file_net(seq);
-	struct kill_request kr = { };
-
-	if (count == 0)
-		return 0;
-
-	if (count >= INET6_ADDRSTRLEN)
-		count = INET6_ADDRSTRLEN - 1;
-
-	if (strnchr(buf, count, ':')) {
-		kr.family = AF_INET6;
-		if (!in6_pton(buf, count, (void *)&kr.addr, '\n', NULL))
-			return -EINVAL;
-	} else if (strnchr(buf, count, '.')) {
-		kr.family = AF_INET;
-		if (!in4_pton(buf, count, (void *)&kr.addr, '\n', NULL))
-			return -EINVAL;
-	}
-
-	nf_ct_iterate_cleanup_net(net, kill_matching, &kr, 0, 0);
-
-	return 0;
-}
-
 static const struct seq_operations ct_cpu_seq_ops = {
 	.start	= ct_cpu_seq_start,
 	.next	= ct_cpu_seq_next,
@@ -526,9 +475,8 @@ static int nf_conntrack_standalone_init_proc(struct net *net)
 	kuid_t root_uid;
 	kgid_t root_gid;
 
-	pde = proc_create_net_data_write("nf_conntrack", 0440, net->proc_net,
-					 &ct_seq_ops, &ct_file_write,
-					 sizeof(struct ct_iter_state), NULL);
+	pde = proc_create_net("nf_conntrack", 0440, net->proc_net, &ct_seq_ops,
+			sizeof(struct ct_iter_state));
 	if (!pde)
 		goto out_nf_conntrack;
 
@@ -671,7 +619,6 @@ enum nf_ct_sysctl_index {
 	NF_SYSCTL_CT_LWTUNNEL,
 #endif
 
-	NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK,
 	__NF_SYSCTL_CT_LAST_SYSCTL,
 };
 
@@ -1027,15 +974,6 @@ static struct ctl_table nf_ct_sysctl_table[] = {
 		.proc_handler	= nf_hooks_lwtunnel_sysctl_handler,
 	},
 #endif
-	[NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK] = {
-		.procname       = "nf_conntrack_tcp_no_window_check",
-		.data           = &init_net.ct.sysctl_no_window_check,
-		.maxlen         = sizeof(u8),
-		.mode           = 0644,
-		.proc_handler	= proc_dou8vec_minmax,
-		.extra1 	= SYSCTL_ZERO,
-		.extra2 	= SYSCTL_ONE,
-	},
 	{}
 };
 
@@ -1163,7 +1101,6 @@ static int nf_conntrack_standalone_init_sysctl(struct net *net)
 #ifdef CONFIG_NF_CONNTRACK_EVENTS
 	table[NF_SYSCTL_CT_EVENTS].data = &net->ct.sysctl_events;
 #endif
-	table[NF_SYSCTL_CT_PROTO_TCP_NO_WINDOW_CHECK].data = &net->ct.sysctl_no_window_check;
 #ifdef CONFIG_NF_CONNTRACK_TIMESTAMP
 	table[NF_SYSCTL_CT_TIMESTAMP].data = &net->ct.sysctl_tstamp;
 #endif
@@ -1233,7 +1170,6 @@ static int nf_conntrack_pernet_init(struct net *net)
 	int ret;
 
 	net->ct.sysctl_checksum = 1;
-	net->ct.sysctl_no_window_check = 1;
 
 	ret = nf_conntrack_standalone_init_sysctl(net);
 	if (ret < 0)
