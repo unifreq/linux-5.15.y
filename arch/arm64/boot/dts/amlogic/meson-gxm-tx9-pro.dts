@@ -8,8 +8,14 @@
 #include "meson-gxm-q200.dts"
 
 / {
+	compatible = "tanix,tx9-pro", "amlogic,gxm";
 	model = "Tanix TX9 Pro";
 
+	openvfd {
+		compatible = "open,vfd";
+		dev_name = "openvfd";
+                status = "okay";
+        };
 };
 
 &ethmac {
