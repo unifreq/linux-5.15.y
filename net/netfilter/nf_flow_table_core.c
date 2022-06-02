@@ -412,7 +412,6 @@ int nf_flow_table_iterate(struct nf_flowtable *flow_table,
 
 	return err;
 }
-EXPORT_SYMBOL_GPL(nf_flow_table_iterate);
 
 static void nf_flow_offload_gc_step(struct nf_flowtable *flow_table,
 				    struct flow_offload *flow, void *data)
@@ -434,6 +433,7 @@ static void nf_flow_offload_gc_step(struct nf_flowtable *flow_table,
 		nf_flow_offload_stats(flow_table, flow);
 	}
 }
+EXPORT_SYMBOL_GPL(nf_flow_table_iterate);
 
 static void nf_flow_offload_work_gc(struct work_struct *work)
 {

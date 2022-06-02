@@ -188,9 +188,11 @@ restart:
 }
 
 static void
-xt_flowoffload_check_hook(struct nf_flowtable *flowtable, struct flow_offload *flow, void *data)
+xt_flowoffload_check_hook(struct nf_flowtable *flowtable,
+			  struct flow_offload *flow, void *data)
 {
-	struct xt_flowoffload_table *table = data;
+	struct xt_flowoffload_table *table;
+	table = container_of(flowtable, struct xt_flowoffload_table, ft);
 	struct flow_offload_tuple *tuple0 = &flow->tuplehash[0].tuple;
 	struct flow_offload_tuple *tuple1 = &flow->tuplehash[1].tuple;
 	struct xt_flowoffload_hook *hook;
@@ -222,7 +224,7 @@ xt_flowoffload_hook_work(struct work_struct *work)
 	spin_unlock_bh(&hooks_lock);
 
 	err = nf_flow_table_iterate(&table->ft, xt_flowoffload_check_hook,
-				    table);
+				    NULL);
 	if (err && err != -EAGAIN)
 		goto out;
 
