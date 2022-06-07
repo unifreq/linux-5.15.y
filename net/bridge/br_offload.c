@@ -257,13 +257,13 @@ void br_offload_output(struct sk_buff *skb)
 	vg = nbp_vlan_group_rcu(inp);
 	vlan = cb->input_vlan_present ? cb->input_vlan_tag : br_get_pvid(vg);
 	fdb_in = br_fdb_find_rcu(p->br, eth_hdr(skb)->h_source, vlan);
-	if (!fdb_in)
+	if (!fdb_in || !fdb_in->dst)
 		goto out;
 
 	vg = nbp_vlan_group_rcu(p);
 	vlan = skb_vlan_tag_present(skb) ? skb_vlan_tag_get_id(skb) : br_get_pvid(vg);
 	fdb_out = br_fdb_find_rcu(p->br, eth_hdr(skb)->h_dest, vlan);
-	if (!fdb_out)
+	if (!fdb_out || !fdb_out->dst)
 		goto out;
 
 	br_offload_prepare_key(p, &key, skb);
@@ -273,7 +273,7 @@ void br_offload_output(struct sk_buff *skb)
 #endif
 
 	flow = kmem_cache_alloc(offload_cache, GFP_ATOMIC);
-	flow->port = fdb_in->dst;
+	flow->port = inp;
 	memcpy(&flow->key, &key, sizeof(key));
 
 #ifdef CONFIG_BRIDGE_VLAN_FILTERING
@@ -288,7 +288,7 @@ void br_offload_output(struct sk_buff *skb)
 	spin_lock_bh(&offload_lock);
 	if (!o->enabled ||
 	    atomic_read(&p->offload.rht.nelems) >= p->br->offload_cache_size ||
-	    rhashtable_insert_fast(&flow->port->offload.rht, &flow->node, flow_params)) {
+	    rhashtable_insert_fast(&inp->offload.rht, &flow->node, flow_params)) {
 		kmem_cache_free(offload_cache, flow);
 		goto out_unlock;
 	}
@@ -334,8 +334,8 @@ bool br_offload_input(struct net_bridge_port *p, struct sk_buff *skb)
 #ifdef CONFIG_BRIDGE_VLAN_FILTERING
 		cb->input_vlan_present = key.vlan_present != 0;
 		cb->input_vlan_tag = key.vlan_tag;
-		cb->input_ifindex = p->dev->ifindex;
 #endif
+		cb->input_ifindex = p->dev->ifindex;
 		goto out;
 	}
 

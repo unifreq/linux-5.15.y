@@ -192,10 +192,11 @@ xt_flowoffload_check_hook(struct nf_flowtable *flowtable,
 			  struct flow_offload *flow, void *data)
 {
 	struct xt_flowoffload_table *table;
-	table = container_of(flowtable, struct xt_flowoffload_table, ft);
 	struct flow_offload_tuple *tuple0 = &flow->tuplehash[0].tuple;
 	struct flow_offload_tuple *tuple1 = &flow->tuplehash[1].tuple;
 	struct xt_flowoffload_hook *hook;
+
+	table = container_of(flowtable, struct xt_flowoffload_table, ft);
 
 	spin_lock_bh(&hooks_lock);
 	hlist_for_each_entry(hook, &table->hooks, list) {
