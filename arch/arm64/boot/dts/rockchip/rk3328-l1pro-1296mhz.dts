@@ -629,12 +629,6 @@
 					 <&cpu3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 			contribution = <4096>;
 		};
-
-		map4 {
-			trip = <&target>;
-			cooling-device = <&gpu THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-			contribution = <4096>;
-		};
         };
 };
 
