@@ -29,18 +29,12 @@
                 red-led {
                         gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
                         default-state = "on";
-                        /*linux,default-trigger = "mmc0";*/
                 };
 
                 blue-led {
                         gpios = <&gpio2 RK_PC5 GPIO_ACTIVE_HIGH>;
                         default-state = "on";
-                        /*linux,default-trigger = "mmc0";*/
-                };
-
-                blackhole {
-                        gpios = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
-                        default-state = "on";
+                        linux,default-trigger = "stmmac-0:00:link";
                 };
 	};
 
@@ -99,18 +93,36 @@
                 regulator-max-microvolt = <1050000>;
         };
 
+        vcc_fan_5v: vcc-fan-5v-regulator {
+                compatible = "regulator-fixed";
+                gpio = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
+
+                regulator-name = "vcc_fan_5v";
+
+                enable-active-high;
+                regulator-boot-on;
+                regulator-always-on;
+
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                vin-supply = <&vcc_sys_5v>;
+	};
+
         vcc_hdd_12v: vcc-hdd-12v-regulator {
                 compatible = "regulator-fixed";
-                enable-active-high;
                 gpio = <&gpio2 RK_PC2 GPIO_ACTIVE_HIGH>;
+
                 pinctrl-names = "default";
                 pinctrl-0 = <&hdd_pwr_pin>;
                 regulator-name = "vcc_hdd_12v";
-                startup-delay-us = <2000000>;
+
+                enable-active-high;
                 regulator-boot-on;
                 regulator-always-on;
+
                 regulator-min-microvolt = <12000000>;
                 regulator-max-microvolt = <12000000>;
+                startup-delay-us = <2000000>;
                 vin-supply = <&vcc_sys_12v>;
         };
 
@@ -156,11 +168,11 @@
 
         fan0: pwm-fan {
                 compatible = "pwm-fan";
-                pwms = <&pwm2 0 40000 0>;
-                cooling-min-state = <0>;
-                cooling-max-state = <3>;
+                pwms = <&pwm2 0 50000 0>;
                 #cooling-cells = <2>;
-                cooling-levels = <63 127 192 255>;
+		cooling-min-state = <0>;
+		cooling-max-state = <3>;
+                cooling-levels = <64 128 192 255>;
                 fan-supply = <&vcc_sys_5v>;
                 status = "okay";
         };
@@ -433,7 +445,7 @@
 };
 
 &i2s1 {
-	status = "okay";
+	status = "disabled";
 };
 
 &pwm2 {
@@ -472,11 +484,13 @@
                 };
         };
 
+	/*
         fan {
                 fan_pwr_pin: fan-pwr-pin {
                         rockchip,pins = <2 RK_PB7 RK_FUNC_GPIO &pcfg_pull_up>;
                 };
         };
+	*/
 };
 
 &sdmmc {
@@ -556,42 +570,71 @@
 };
 
 &soc_thermal {
+	/delete-node/ trips;
+	/delete-node/ cooling-maps;
         trips {
-
-                cpu_cool: cpu_cool {
-                        temperature = <45000>;
+                soc_cool: soc-cool {
+                        temperature = <50000>;
                         hysteresis = <2000>;
                         type = "active";
                 };
 
-                cpu_warm: cpu_warm {
-                        temperature = <55000>;
+                soc_warm: soc-warm {
+                        temperature = <60000>;
                         hysteresis = <2000>;
                         type = "active";
                 };
 
-                cpu_hot: cpu_hot {
-                        temperature = <65000>;
-                        hysteresis = <2000>;
-                        type = "active";
-                };
+		threshold: trip-point0 {
+			temperature = <70000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+
+		target: trip-point1 {
+			temperature = <85000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+
+		soc_crit: soc-crit {
+			temperature = <95000>;
+			hysteresis = <2000>;
+			type = "critical";
+		};
         };
 
         cooling-maps {
-                map1 {
-                        trip = <&cpu_cool>;
+
+                map0 {
+                        trip = <&soc_cool>;
                         cooling-device = <&fan0 0 1>;
                 };
 
-                map2 {
-                        trip = <&cpu_warm>;
+                map1 {
+                        trip = <&soc_warm>;
                         cooling-device = <&fan0 1 2>;
                 };
 
-                map3 {
-                        trip = <&cpu_hot>;
+                map2 {
+                        trip = <&threshold>;
                         cooling-device = <&fan0 2 3>;
-                };
+		};
+
+		map3 {
+			trip = <&target>;
+			cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+					 <&cpu1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+					 <&cpu2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+					 <&cpu3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+			contribution = <4096>;
+		};
+
+		map4 {
+			trip = <&target>;
+			cooling-device = <&gpu THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+			contribution = <4096>;
+		};
         };
 };
 
