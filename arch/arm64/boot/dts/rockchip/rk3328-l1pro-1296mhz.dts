@@ -97,6 +97,8 @@
                 compatible = "regulator-fixed";
                 gpio = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
 
+                pinctrl-names = "default";
+                pinctrl-0 = <&fan_pwr_pin>;
                 regulator-name = "vcc_fan_5v";
 
                 enable-active-high;
@@ -172,42 +174,12 @@
                 #cooling-cells = <2>;
 		cooling-min-state = <0>;
 		cooling-max-state = <3>;
-                cooling-levels = <64 128 192 255>;
+                cooling-levels = <100 150 200 255>;
                 fan-supply = <&vcc_sys_5v>;
                 status = "okay";
         };
 
-	dfi: dfi@ff790000 {
-		reg = <0x00 0xff790000 0x00 0x400>;
-		compatible = "rockchip,rk3328-dfi";
-		rockchip,grf = <&grf>;
-		status = "disabled";
-	};
-
-	dmc: dmc {
-		compatible = "rockchip,rk3328-dmc";
-		devfreq-events = <&dfi>;
-		clocks = <&cru SCLK_DDRCLK>;
-		clock-names = "dmc_clk";
-		operating-points-v2 = <&dmc_opp_table>;
-		ddr_timing = <&ddr_timing>;
-		upthreshold = <40>;
-		downdifferential = <20>;
-		auto-min-freq = <786000>;
-		auto-freq-en = <0>;
-		#cooling-cells = <2>;
-		status = "disabled";
-
-		ddr_power_model: ddr_power_model {
-			compatible = "ddr_power_model";
-			dynamic-power-coefficient = <120>;
-			static-power-coefficient = <200>;
-			ts = <32000 4700 (-80) 2>;
-			thermal-zone = "soc-thermal";
-		};
-	};
-
-	dmc_opp_table: dmc-opp-table {
+	dmc_opp_table_hack: dmc-opp-table-hack {
 		compatible = "operating-points-v2";
 
 		rockchip,leakage-voltage-sel = <
@@ -244,12 +216,27 @@
 	};
 };
 
-&analog_sound {
+&dfi {
 	status = "okay";
 };
 
-&codec {
+&dmc {
+	operating-points-v2 = <&dmc_opp_table_hack>;
+	ddr_timing = <&ddr_timing>;
+	upthreshold = <40>;
+	downdifferential = <20>;
+	auto-min-freq = <786000>;
+	auto-freq-en = <0>;
 	status = "okay";
+	center-supply = <&vdd_logic>;
+
+	ddr_power_model: ddr_power_model {
+		compatible = "ddr_power_model";
+		dynamic-power-coefficient = <120>;
+		static-power-coefficient = <200>;
+		ts = <32000 4700 (-80) 2>;
+		thermal-zone = "soc-thermal";
+	};
 };
 
 &cpu0 {
@@ -302,15 +289,6 @@
 
 &gpu {
 	mali-supply = <&vdd_logic>;
-};
-
-&dfi {
-	status = "okay";
-};
-
-&dmc {
-	center-supply = <&vdd_logic>;
-	status = "okay";
 };
 
 &rng {
@@ -444,10 +422,6 @@
 	status = "okay";
 };
 
-&i2s1 {
-	status = "disabled";
-};
-
 &pwm2 {
         status = "okay";
 };
@@ -484,13 +458,11 @@
                 };
         };
 
-	/*
         fan {
                 fan_pwr_pin: fan-pwr-pin {
                         rockchip,pins = <2 RK_PB7 RK_FUNC_GPIO &pcfg_pull_up>;
                 };
         };
-	*/
 };
 
 &sdmmc {
@@ -502,10 +474,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc0_clk &sdmmc0_cmd &sdmmc0_dectn &sdmmc0_bus4>;
 	vmmc-supply = <&vcc_io>;
-	status = "disabled";
-};
-
-&spi0 {
 	status = "disabled";
 };
 
