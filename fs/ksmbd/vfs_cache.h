@@ -96,7 +96,6 @@ struct ksmbd_file {
 
 	int				durable_timeout;
 
-#ifdef CONFIG_SMB_INSECURE_SERVER
 	/* for SMB1 */
 	int				pid;
 
@@ -106,7 +105,7 @@ struct ksmbd_file {
 	unsigned long long		llock_fstart;
 
 	int				dirent_offset;
-#endif
+
 	/* if ls is happening on directory, below is valid*/
 	struct ksmbd_readdir_data	readdir_data;
 	int				dot_dotdot[2];
@@ -145,9 +144,6 @@ struct ksmbd_file *ksmbd_lookup_fd_slow(struct ksmbd_work *work, u64 id,
 void ksmbd_fd_put(struct ksmbd_work *work, struct ksmbd_file *fp);
 struct ksmbd_file *ksmbd_lookup_durable_fd(unsigned long long id);
 struct ksmbd_file *ksmbd_lookup_fd_cguid(char *cguid);
-#ifdef CONFIG_SMB_INSECURE_SERVER
-struct ksmbd_file *ksmbd_lookup_fd_filename(struct ksmbd_work *work, char *filename);
-#endif
 struct ksmbd_file *ksmbd_lookup_fd_inode(struct inode *inode);
 unsigned int ksmbd_open_durable_fd(struct ksmbd_file *fp);
 struct ksmbd_file *ksmbd_open_fd(struct ksmbd_work *work, struct file *filp);
@@ -156,7 +152,6 @@ void ksmbd_close_session_fds(struct ksmbd_work *work);
 int ksmbd_close_inode_fds(struct ksmbd_work *work, struct inode *inode);
 int ksmbd_init_global_file_table(void);
 void ksmbd_free_global_file_table(void);
-int ksmbd_file_table_flush(struct ksmbd_work *work);
 void ksmbd_set_fd_limit(unsigned long limit);
 
 /*

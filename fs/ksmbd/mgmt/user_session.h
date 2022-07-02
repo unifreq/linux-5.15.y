@@ -12,9 +12,6 @@
 #include "../smb_common.h"
 #include "../ntlmssp.h"
 
-#ifdef CONFIG_SMB_INSECURE_SERVER
-#define CIFDS_SESSION_FLAG_SMB1		BIT(0)
-#endif
 #define CIFDS_SESSION_FLAG_SMB2		BIT(1)
 
 #define PREAUTH_HASHVALUE_SIZE		64
@@ -48,6 +45,7 @@ struct ksmbd_session {
 	int				state;
 	__u8				*Preauth_HashValue;
 
+	struct ntlmssp_auth		ntlmssp;
 	char				sess_key[CIFS_KEY_SIZE];
 
 	struct hlist_node		hlist;
@@ -80,9 +78,6 @@ static inline void clear_session_flag(struct ksmbd_session *sess, int bit)
 	sess->flags &= ~bit;
 }
 
-#ifdef CONFIG_SMB_INSECURE_SERVER
-struct ksmbd_session *ksmbd_smb1_session_create(void);
-#endif
 struct ksmbd_session *ksmbd_smb2_session_create(void);
 
 void ksmbd_session_destroy(struct ksmbd_session *sess);

@@ -13,34 +13,6 @@
 #include "smb_common.h"
 #include "server.h"
 
-#ifdef CONFIG_SMB_INSECURE_SERVER
-static struct smb_version_values smb20_server_values = {
-	.version_string = SMB20_VERSION_STRING,
-	.protocol_id = SMB20_PROT_ID,
-	.capabilities = 0,
-	.max_read_size = CIFS_DEFAULT_IOSIZE,
-	.max_write_size = CIFS_DEFAULT_IOSIZE,
-	.max_trans_size = CIFS_DEFAULT_IOSIZE,
-	.max_credits = SMB2_MAX_CREDITS,
-	.large_lock_type = 0,
-	.exclusive_lock_type = SMB2_LOCKFLAG_EXCLUSIVE,
-	.shared_lock_type = SMB2_LOCKFLAG_SHARED,
-	.unlock_lock_type = SMB2_LOCKFLAG_UNLOCK,
-	.header_size = sizeof(struct smb2_hdr),
-	.max_header_size = MAX_SMB2_HDR_SIZE,
-	.read_rsp_size = sizeof(struct smb2_read_rsp) - 1,
-	.lock_cmd = SMB2_LOCK,
-	.cap_unix = 0,
-	.cap_nt_find = SMB2_NT_FIND,
-	.cap_large_files = SMB2_LARGE_FILES,
-	.create_lease_size = sizeof(struct create_lease),
-	.create_durable_size = sizeof(struct create_durable_rsp),
-	.create_mxac_size = sizeof(struct create_mxac_rsp),
-	.create_disk_id_size = sizeof(struct create_disk_id_rsp),
-	.create_posix_size = sizeof(struct create_posix_rsp),
-};
-#endif
-
 static struct smb_version_values smb21_server_values = {
 	.version_string = SMB21_VERSION_STRING,
 	.protocol_id = SMB21_PROT_ID,
@@ -218,28 +190,6 @@ static struct smb_version_cmds smb2_0_server_cmds[NUMBER_OF_SMB2_COMMANDS] = {
 	[SMB2_OPLOCK_BREAK_HE]	=	{ .proc = smb2_oplock_break},
 	[SMB2_CHANGE_NOTIFY_HE]	=	{ .proc = smb2_notify},
 };
-
-#ifdef CONFIG_SMB_INSECURE_SERVER
-/**
- * init_smb2_0_server() - initialize a smb server connection with smb2.0
- *			command dispatcher
- * @conn:	connection instance
- */
-int init_smb2_0_server(struct ksmbd_conn *conn)
-{
-	conn->vals = &smb20_server_values;
-	conn->ops = &smb2_0_server_ops;
-	conn->cmds = smb2_0_server_cmds;
-	conn->max_cmds = ARRAY_SIZE(smb2_0_server_cmds);
-	conn->signing_algorithm = SIGNING_ALG_HMAC_SHA256;
-	return 0;
-}
-#else
-int init_smb2_0_server(struct ksmbd_conn *conn)
-{
-	return -EOPNOTSUPP;
-}
-#endif
 
 /**
  * init_smb2_1_server() - initialize a smb server connection with smb2.1

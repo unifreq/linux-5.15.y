@@ -130,6 +130,11 @@
 	cpu_to_le16(__SMB2_HEADER_STRUCTURE_SIZE)
 
 struct smb2_hdr {
+	__be32 smb2_buf_length;	/* big endian on wire */
+				/*
+				 * length is only two or three bytes - with
+				 * one or two byte type preceding it that MBZ
+				 */
 	__le32 ProtocolId;	/* 0xFE 'S' 'M' 'B' */
 	__le16 StructureSize;	/* 64 */
 	__le16 CreditCharge;	/* MBZ */
@@ -159,6 +164,11 @@ struct smb2_pdu {
 #define SMB3_AES_GCM_NONCE 12
 
 struct smb2_transform_hdr {
+	__be32 smb2_buf_length; /* big endian on wire */
+	/*
+	 * length is only two or three bytes - with
+	 * one or two byte type preceding it that MBZ
+	 */
 	__le32 ProtocolId;      /* 0xFD 'S' 'M' 'B' */
 	__u8   Signature[16];
 	__u8   Nonce[16];
@@ -243,14 +253,14 @@ struct preauth_integrity_info {
 	__u8			Preauth_HashValue[PREAUTH_HASHVALUE_SIZE];
 };
 
-/* offset is sizeof smb2_negotiate_rsp but rounded up to 8 bytes. */
+/* offset is sizeof smb2_negotiate_rsp - 4 but rounded up to 8 bytes. */
 #ifdef CONFIG_SMB_SERVER_KERBEROS5
-/* sizeof(struct smb2_negotiate_rsp) =
+/* sizeof(struct smb2_negotiate_rsp) - 4 =
  * header(64) + response(64) + GSS_LENGTH(96) + GSS_PADDING(0)
  */
 #define OFFSET_OF_NEG_CONTEXT	0xe0
 #else
-/* sizeof(struct smb2_negotiate_rsp) =
+/* sizeof(struct smb2_negotiate_rsp) - 4 =
  * header(64) + response(64) + GSS_LENGTH(74) + GSS_PADDING(6)
  */
 #define OFFSET_OF_NEG_CONTEXT	0xd0
@@ -601,8 +611,8 @@ struct smb2_create_rsp {
 	__le64 EndofFile;
 	__le32 FileAttributes;
 	__le32 Reserved2;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__le32 CreateContextsOffset;
 	__le32 CreateContextsLength;
 	__u8   Buffer[1];
@@ -633,8 +643,8 @@ struct create_durable_reconn_req {
 	union {
 		__u8  Reserved[16];
 		struct {
-			__u64 PersistentFileId;
-			__u64 VolatileFileId;
+			__le64 PersistentFileId;
+			__le64 VolatileFileId;
 		} Fid;
 	} Data;
 } __packed;
@@ -643,8 +653,8 @@ struct create_durable_reconn_v2_req {
 	struct create_context ccontext;
 	__u8   Name[8];
 	struct {
-		__u64 PersistentFileId;
-		__u64 VolatileFileId;
+		__le64 PersistentFileId;
+		__le64 VolatileFileId;
 	} Fid;
 	__u8 CreateGuid[16];
 	__le32 Flags;
@@ -733,21 +743,22 @@ struct create_posix_rsp {
 
 #define SMB2_LEASE_FLAG_BREAK_IN_PROGRESS_LE	cpu_to_le32(0x02)
 
-#define SMB2_LEASE_KEY_SIZE			16
-
 struct lease_context {
-	__u8 LeaseKey[SMB2_LEASE_KEY_SIZE];
+	__le64 LeaseKeyLow;
+	__le64 LeaseKeyHigh;
 	__le32 LeaseState;
 	__le32 LeaseFlags;
 	__le64 LeaseDuration;
 } __packed;
 
 struct lease_context_v2 {
-	__u8 LeaseKey[SMB2_LEASE_KEY_SIZE];
+	__le64 LeaseKeyLow;
+	__le64 LeaseKeyHigh;
 	__le32 LeaseState;
 	__le32 LeaseFlags;
 	__le64 LeaseDuration;
-	__u8 ParentLeaseKey[SMB2_LEASE_KEY_SIZE];
+	__le64 ParentLeaseKeyLow;
+	__le64 ParentLeaseKeyHigh;
 	__le16 Epoch;
 	__le16 Reserved;
 } __packed;
@@ -772,8 +783,8 @@ struct smb2_close_req {
 	__le16 StructureSize;	/* Must be 24 */
 	__le16 Flags;
 	__le32 Reserved;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 } __packed;
 
 struct smb2_close_rsp {
@@ -795,8 +806,8 @@ struct smb2_flush_req {
 	__le16 StructureSize;	/* Must be 24 */
 	__le16 Reserved1;
 	__le32 Reserved2;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 } __packed;
 
 struct smb2_flush_rsp {
@@ -822,8 +833,8 @@ struct smb2_read_req {
 	__u8   Reserved;
 	__le32 Length;
 	__le64 Offset;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__le32 MinimumCount;
 	__le32 Channel; /* Reserved MBZ */
 	__le32 RemainingBytes;
@@ -852,8 +863,8 @@ struct smb2_write_req {
 	__le16 DataOffset; /* offset from start of SMB2 header to write data */
 	__le32 Length;
 	__le64 Offset;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__le32 Channel; /* Reserved MBZ */
 	__le32 RemainingBytes;
 	__le16 WriteChannelInfoOffset; /* Reserved MBZ */
@@ -888,8 +899,8 @@ struct smb2_ioctl_req {
 	__le16 StructureSize; /* Must be 57 */
 	__le16 Reserved; /* offset from start of SMB2 header to write data */
 	__le32 CntCode;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__le32 InputOffset; /* Reserved MBZ */
 	__le32 InputCount;
 	__le32 MaxInputResponse;
@@ -906,8 +917,8 @@ struct smb2_ioctl_rsp {
 	__le16 StructureSize; /* Must be 49 */
 	__le16 Reserved; /* offset from start of SMB2 header to write data */
 	__le32 CntCode;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__le32 InputOffset; /* Reserved MBZ */
 	__le32 InputCount;
 	__le32 OutputOffset;
@@ -976,7 +987,7 @@ struct file_object_buf_type1_ioctl_rsp {
 } __packed;
 
 struct resume_key_ioctl_rsp {
-	__u64 ResumeKey[3];
+	__le64 ResumeKey[3];
 	__le32 ContextLength;
 	__u8 Context[4]; /* ignored, Windows sets to 4 bytes of zero */
 } __packed;
@@ -1045,8 +1056,8 @@ struct smb2_notify_req {
 	__le16 StructureSize; /* Must be 32 */
 	__le16 Flags;
 	__le32 OutputBufferLength;
-	__u64 PersistentFileId;
-	__u64 VolatileFileId;
+	__le64 PersistentFileId;
+	__le64 VolatileFileId;
 	__u32 CompletionFileter;
 	__u32 Reserved;
 } __packed;
@@ -1088,8 +1099,8 @@ struct smb2_lock_req {
 	__le16 StructureSize; /* Must be 48 */
 	__le16 LockCount;
 	__le32 Reserved;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	/* Followed by at least one */
 	struct smb2_lock_element locks[1];
 } __packed;
@@ -1124,8 +1135,8 @@ struct smb2_query_directory_req {
 	__u8   FileInformationClass;
 	__u8   Flags;
 	__le32 FileIndex;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__le16 FileNameOffset;
 	__le16 FileNameLength;
 	__le32 OutputBufferLength;
@@ -1171,8 +1182,8 @@ struct smb2_query_info_req {
 	__le32 InputBufferLength;
 	__le32 AdditionalInformation;
 	__le32 Flags;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__u8   Buffer[1];
 } __packed;
 
@@ -1193,8 +1204,8 @@ struct smb2_set_info_req {
 	__le16 BufferOffset;
 	__u16  Reserved;
 	__le32 AdditionalInformation;
-	__u64  PersistentFileId;
-	__u64  VolatileFileId;
+	__le64  PersistentFileId;
+	__le64  VolatileFileId;
 	__u8   Buffer[1];
 } __packed;
 
@@ -1628,7 +1639,6 @@ struct smb2_posix_info {
 } __packed;
 
 /* functions */
-int init_smb2_0_server(struct ksmbd_conn *conn);
 void init_smb2_1_server(struct ksmbd_conn *conn);
 void init_smb3_0_server(struct ksmbd_conn *conn);
 void init_smb3_02_server(struct ksmbd_conn *conn);
@@ -1695,14 +1705,5 @@ int smb2_lock(struct ksmbd_work *work);
 int smb2_ioctl(struct ksmbd_work *work);
 int smb2_oplock_break(struct ksmbd_work *work);
 int smb2_notify(struct ksmbd_work *ksmbd_work);
-
-/*
- * Get the body of the smb2 message excluding the 4 byte rfc1002 headers
- * from request/response buffer.
- */
-static inline void *smb2_get_msg(void *buf)
-{
-	return buf + 4;
-}
 
 #endif	/* _SMB2PDU_H */

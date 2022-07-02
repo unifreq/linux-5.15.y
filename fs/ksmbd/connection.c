@@ -10,9 +10,6 @@
 
 #include "server.h"
 #include "smb_common.h"
-#ifdef CONFIG_SMB_INSECURE_SERVER
-#include "smb1pdu.h"
-#endif
 #include "mgmt/ksmbd_ida.h"
 #include "connection.h"
 #include "transport_tcp.h"
@@ -106,24 +103,11 @@ void ksmbd_conn_enqueue_request(struct ksmbd_work *work)
 {
 	struct ksmbd_conn *conn = work->conn;
 	struct list_head *requests_queue = NULL;
-#ifdef CONFIG_SMB_INSECURE_SERVER
-	struct smb2_hdr *hdr = work->request_buf;
 
-	if (hdr->ProtocolId == SMB2_PROTO_NUMBER) {
-		if (conn->ops->get_cmd_val(work) != SMB2_CANCEL_HE) {
-			requests_queue = &conn->requests;
-			work->syncronous = true;
-		}
-	} else {
-		if (conn->ops->get_cmd_val(work) != SMB_COM_NT_CANCEL)
-			requests_queue = &conn->requests;
-	}
-#else
 	if (conn->ops->get_cmd_val(work) != SMB2_CANCEL_HE) {
 		requests_queue = &conn->requests;
 		work->syncronous = true;
 	}
-#endif
 
 	if (requests_queue) {
 		atomic_inc(&conn->req_running);
@@ -175,25 +159,26 @@ void ksmbd_conn_wait_idle(struct ksmbd_conn *conn)
 int ksmbd_conn_write(struct ksmbd_work *work)
 {
 	struct ksmbd_conn *conn = work->conn;
+	struct smb_hdr *rsp_hdr = work->response_buf;
 	size_t len = 0;
 	int sent;
 	struct kvec iov[3];
 	int iov_idx = 0;
 
 	ksmbd_conn_try_dequeue_request(work);
-	if (!work->response_buf) {
+	if (!rsp_hdr) {
 		pr_err("NULL response header\n");
 		return -EINVAL;
 	}
 
 	if (work->tr_buf) {
 		iov[iov_idx] = (struct kvec) { work->tr_buf,
-				sizeof(struct smb2_transform_hdr) + 4 };
+				sizeof(struct smb2_transform_hdr) };
 		len += iov[iov_idx++].iov_len;
 	}
 
 	if (work->aux_payload_sz) {
-		iov[iov_idx] = (struct kvec) { work->response_buf, work->resp_hdr_sz };
+		iov[iov_idx] = (struct kvec) { rsp_hdr, work->resp_hdr_sz };
 		len += iov[iov_idx++].iov_len;
 		iov[iov_idx] = (struct kvec) { work->aux_payload_buf, work->aux_payload_sz };
 		len += iov[iov_idx++].iov_len;
@@ -201,8 +186,8 @@ int ksmbd_conn_write(struct ksmbd_work *work)
 		if (work->tr_buf)
 			iov[iov_idx].iov_len = work->resp_hdr_sz;
 		else
-			iov[iov_idx].iov_len = get_rfc1002_len(work->response_buf) + 4;
-		iov[iov_idx].iov_base = work->response_buf;
+			iov[iov_idx].iov_len = get_rfc1002_len(rsp_hdr) + 4;
+		iov[iov_idx].iov_base = rsp_hdr;
 		len += iov[iov_idx++].iov_len;
 	}
 
@@ -221,31 +206,31 @@ int ksmbd_conn_write(struct ksmbd_work *work)
 	return 0;
 }
 
-int ksmbd_conn_rdma_read(struct ksmbd_conn *conn,
-			 void *buf, unsigned int buflen,
-			 struct smb2_buffer_desc_v1 *desc,
-			 unsigned int desc_len)
+int ksmbd_conn_rdma_read(struct ksmbd_conn *conn, void *buf,
+			 unsigned int buflen, u32 remote_key, u64 remote_offset,
+			 u32 remote_len)
 {
 	int ret = -EINVAL;
 
 	if (conn->transport->ops->rdma_read)
 		ret = conn->transport->ops->rdma_read(conn->transport,
 						      buf, buflen,
-						      desc, desc_len);
+						      remote_key, remote_offset,
+						      remote_len);
 	return ret;
 }
 
-int ksmbd_conn_rdma_write(struct ksmbd_conn *conn,
-			  void *buf, unsigned int buflen,
-			  struct smb2_buffer_desc_v1 *desc,
-			  unsigned int desc_len)
+int ksmbd_conn_rdma_write(struct ksmbd_conn *conn, void *buf,
+			  unsigned int buflen, u32 remote_key,
+			  u64 remote_offset, u32 remote_len)
 {
 	int ret = -EINVAL;
 
 	if (conn->transport->ops->rdma_write)
 		ret = conn->transport->ops->rdma_write(conn->transport,
 						       buf, buflen,
-						       desc, desc_len);
+						       remote_key, remote_offset,
+						       remote_len);
 	return ret;
 }
 
@@ -314,15 +299,14 @@ int ksmbd_conn_handler_loop(void *p)
 		pdu_size = get_rfc1002_len(hdr_buf);
 		ksmbd_debug(CONN, "RFC1002 header %u bytes\n", pdu_size);
 
-		/* make sure we have enough to get to SMB header end */
-		if (!ksmbd_pdu_size_has_room(pdu_size)) {
-			ksmbd_debug(CONN, "SMB request too short (%u bytes)\n",
-				    pdu_size);
+		/*
+		 * Check if pdu size is valid (min : smb header size,
+		 * max : 0x00FFFFFF).
+		 */
+		if (pdu_size < __SMB2_HEADER_STRUCTURE_SIZE ||
+		    pdu_size > MAX_STREAM_PROT_LEN) {
 			continue;
 		}
-
-		if (pdu_size > MAX_STREAM_PROT_LEN)
-                        continue;
 
 		/* 4 for rfc1002 length field */
 		size = pdu_size + 4;
@@ -404,24 +388,17 @@ out:
 static void stop_sessions(void)
 {
 	struct ksmbd_conn *conn;
-	struct ksmbd_transport *t;
 
 again:
 	read_lock(&conn_list_lock);
 	list_for_each_entry(conn, &conn_list, conns_list) {
 		struct task_struct *task;
 
-		t = conn->transport;
-		task = t->handler;
+		task = conn->transport->handler;
 		if (task)
 			ksmbd_debug(CONN, "Stop session handler %s/%d\n",
 				    task->comm, task_pid_nr(task));
 		conn->status = KSMBD_SESS_EXITING;
-		if (t->ops->shutdown) {
-			read_unlock(&conn_list_lock);
-			t->ops->shutdown(t);
-			read_lock(&conn_list_lock);
-		}
 	}
 	read_unlock(&conn_list_lock);
 

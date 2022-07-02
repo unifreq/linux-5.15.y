@@ -50,9 +50,6 @@
 
 #define MAX_STREAM_PROT_LEN	0x00FFFFFF
 
-#define IS_SMB2(x)		((x)->vals->protocol_id != SMB10_PROT_ID)
-#define MAX_HEADER_SIZE(conn)		((conn)->vals->max_header_size)
-
 /* Responses when opening a file. */
 #define F_SUPERSEDED	0
 #define F_OPENED	1
@@ -481,6 +478,12 @@ struct smb_version_cmds {
 	int (*proc)(struct ksmbd_work *swork);
 };
 
+static inline size_t
+smb2_hdr_size_no_buflen(struct smb_version_values *vals)
+{
+	return vals->header_size - 4;
+}
+
 int ksmbd_min_protocol(void);
 int ksmbd_max_protocol(void);
 
@@ -492,8 +495,6 @@ bool ksmbd_smb_request(struct ksmbd_conn *conn);
 int ksmbd_lookup_dialect_by_id(__le16 *cli_dialects, __le16 dialects_count);
 
 int ksmbd_init_smb_server(struct ksmbd_work *work);
-
-bool ksmbd_pdu_size_has_room(unsigned int pdu);
 
 struct ksmbd_kstat;
 int ksmbd_populate_dot_dotdot_entries(struct ksmbd_work *work,

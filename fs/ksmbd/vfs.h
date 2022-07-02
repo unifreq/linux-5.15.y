@@ -77,9 +77,6 @@ struct ksmbd_conn;
 
 struct ksmbd_dir_info {
 	const char	*name;
-#ifdef CONFIG_SMB_INSECURE_SERVER
-	char		*smb1_name;
-#endif
 	char		*wptr;
 	char		*rptr;
 	int		name_len;
@@ -111,18 +108,6 @@ struct ksmbd_kstat {
 	__le32			file_attributes;
 };
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0)
-static inline struct user_namespace *mnt_user_ns(const struct vfsmount *mnt)
-{
-	return &init_user_ns;
-}
-
-static inline struct user_namespace *file_mnt_user_ns(struct file *file)
-{
-	return &init_user_ns;
-}
-#endif
-
 int ksmbd_vfs_lock_parent(struct user_namespace *user_ns, struct dentry *parent,
 			  struct dentry *child);
 int ksmbd_vfs_may_delete(struct user_namespace *user_ns, struct dentry *dentry);
@@ -140,22 +125,8 @@ int ksmbd_vfs_remove_file(struct ksmbd_work *work, char *name);
 int ksmbd_vfs_link(struct ksmbd_work *work,
 		   const char *oldname, const char *newname);
 int ksmbd_vfs_getattr(struct path *path, struct kstat *stat);
-#ifdef CONFIG_SMB_INSECURE_SERVER
-int ksmbd_vfs_setattr(struct ksmbd_work *work, const char *name,
-		      u64 fid, struct iattr *attrs);
-int ksmbd_vfs_symlink(struct ksmbd_work *work,
-		      const char *name, const char *symname);
-int ksmbd_vfs_readlink(struct path *path, char *buf, int lenp);
-int ksmbd_vfs_readdir_name(struct ksmbd_work *work,
-			   struct user_namespace *user_ns,
-			   struct ksmbd_kstat *ksmbd_kstat,
-			   const char *de_name, int de_name_len,
-			   const char *dir_path);
-#endif
 int ksmbd_vfs_fp_rename(struct ksmbd_work *work, struct ksmbd_file *fp,
 			char *newname);
-int ksmbd_vfs_rename_slowpath(struct ksmbd_work *work,
-			      char *oldname, char *newname);
 int ksmbd_vfs_truncate(struct ksmbd_work *work,
 		       struct ksmbd_file *fp, loff_t size);
 struct srv_copychunk;
@@ -167,9 +138,6 @@ int ksmbd_vfs_copy_file_ranges(struct ksmbd_work *work,
 			       unsigned int *chunk_count_written,
 			       unsigned int *chunk_size_written,
 			       loff_t  *total_size_written);
-struct ksmbd_file *ksmbd_vfs_dentry_open(struct ksmbd_work *work,
-					 const struct path *path, int flags,
-					 __le32 option, int fexist);
 ssize_t ksmbd_vfs_listxattr(struct dentry *dentry, char **list);
 ssize_t ksmbd_vfs_getxattr(struct user_namespace *user_ns,
 			   struct dentry *dentry,
@@ -181,9 +149,6 @@ ssize_t ksmbd_vfs_casexattr_len(struct user_namespace *user_ns,
 int ksmbd_vfs_setxattr(struct user_namespace *user_ns,
 		       struct dentry *dentry, const char *attr_name,
 		       const void *attr_value, size_t attr_size, int flags);
-int ksmbd_vfs_fsetxattr(struct ksmbd_work *work, const char *filename,
-			const char *attr_name, const void *attr_value,
-			size_t attr_size, int flags);
 int ksmbd_vfs_xattr_stream_name(char *stream_name, char **xattr_stream_name,
 				size_t *xattr_stream_name_size, int s_type);
 int ksmbd_vfs_remove_xattr(struct user_namespace *user_ns,
