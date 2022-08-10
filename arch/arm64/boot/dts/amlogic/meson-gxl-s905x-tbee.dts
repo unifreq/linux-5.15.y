@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2022 flippy
+ */
+
+/dts-v1/;
+
+#include "meson-gxl-s905x-p212.dts"
+
+/ {
+	compatible = "amlogic,p212", "amlogic,s905x", "amlogic,meson-gxl";
+	model = "TBee-Box";
+
+};
+
+/* This is connected to the Bluetooth module: */
+&uart_A {
+	status = "okay";
+	pinctrl-0 = <&uart_a_pins>, <&uart_a_cts_rts_pins>;
+	pinctrl-names = "default";
+	uart-has-rtscts;
+
+	bluetooth {
+		compatible = "qcom,qca9377-bt";
+		enable-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
+	};
+};
