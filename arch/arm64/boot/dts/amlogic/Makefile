@@ -108,6 +108,7 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-hk1box-vontar-x3.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-hk1box-vontar-x3-oc.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-ugoos-x3.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-ugoos-x3-oc.dtb
+dtb-$(CONFIG_ARCH_MESON) += meson-sm1-skyworth-lb2004-a4091.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-tx3-bz.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-tx3-bz-oc.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-tx3-qz.dtb
