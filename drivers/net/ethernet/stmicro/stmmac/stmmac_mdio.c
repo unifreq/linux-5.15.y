@@ -498,6 +498,11 @@ int stmmac_mdio_register(struct net_device *ndev)
 	if (priv->plat->has_xgmac)
 		stmmac_xgmac2_mdio_read(new_bus, 0, MII_ADDR_C45);
 
+		stmmac_mdio_write(new_bus,0,31,2627);
+		stmmac_mdio_write(new_bus,0,25,0x1801);
+		stmmac_mdio_write(new_bus,0,31,0);
+		stmmac_mdio_write(new_bus,0,0,0x8000);
+
 	if (priv->plat->phy_node || mdio_node)
 		goto bus_register_done;
 
