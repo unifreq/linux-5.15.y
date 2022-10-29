@@ -98,6 +98,7 @@ struct h5 {
 	const struct h5_vnd *vnd;
 	const char *id;
 
+	struct gpio_desc *reset_gpio;
 	struct gpio_desc *enable_gpio;
 	struct gpio_desc *device_wake_gpio;
 };
@@ -853,6 +854,10 @@ static int h5_serdev_probe(struct serdev_device *serdev)
 	if (data->driver_info & H5_INFO_WAKEUP_DISABLE)
 		set_bit(H5_WAKEUP_DISABLE, &h5->flags);
 
+	h5->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+	if (IS_ERR(h5->reset_gpio))
+		return PTR_ERR(h5->reset_gpio);
+
 	h5->enable_gpio = devm_gpiod_get_optional(dev, "enable", GPIOD_OUT_LOW);
 	if (IS_ERR(h5->enable_gpio))
 		return PTR_ERR(h5->enable_gpio);
@@ -907,10 +912,18 @@ static int h5_btrtl_setup(struct h5 *h5)
 	u32 device_baudrate;
 	unsigned int controller_baudrate;
 	bool flow_control;
-	int err;
+	int err, retry = h5->reset_gpio ? 3 : 1;
 
-	btrtl_dev = btrtl_initialize(h5->hu->hdev, h5->id);
-	if (IS_ERR(btrtl_dev))
+	do {
+		if (h5->reset_gpio) {
+			gpiod_set_value_cansleep(h5->reset_gpio, 1);
+			msleep(500);
+			gpiod_set_value_cansleep(h5->reset_gpio, 0);
+			msleep(500);
+		}
+		btrtl_dev = btrtl_initialize(h5->hu->hdev, h5->id);
+	} while (IS_ERR(btrtl_dev) && --retry > 0);
+	if (retry == 0)
 		return PTR_ERR(btrtl_dev);
 
 	err = btrtl_get_uart_settings(h5->hu->hdev, btrtl_dev,
