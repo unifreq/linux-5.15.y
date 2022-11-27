@@ -8,10 +8,11 @@
 /dts-v1/;
 
 #include "meson-sm1-ac2xx.dtsi"
+#include <dt-bindings/leds/common.h>
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
 
 / {
-	compatible = "amlogic,sm1";
+	compatible = "skyworth,lb2004", "amlogic,s905x3", "amlogic,sm1";
 	model = "SKYWORTH LB2004-A4091";
 
 	memory@0 {
@@ -22,23 +23,17 @@
 	leds {
 		compatible = "gpio-leds";
 
-		sys_led {
-			label = "sys_led";
-			gpios = <&gpio_ao GPIOAO_10 GPIO_ACTIVE_HIGH>;
-			default-state = "on";
-		};
-
-		remote_led {
-			label = "remote_led";
+		/* Mainline u-boot lacks TCA6507 driver. Currently only using bootloader, TCA6507 LEDs works. */
+		gpio_led {
+			label = "gpio_led";
 			gpios = <&gpio_ao GPIOAO_11 GPIO_ACTIVE_HIGH>;
-			default-state = "off";
-			linux,default-trigger = "rc-feedback";
+			linux,default-trigger = "default-on";
 		};
 	};
 
 	sound {
 		compatible = "amlogic,axg-sound-card";
-		model = "LB2004";
+		model = "LB2004-A4091";
 		audio-aux-devs = <&tdmout_b>;
 		audio-routing = "TDMOUT_B IN 0", "FRDDR_A OUT 1",
 				"TDMOUT_B IN 1", "FRDDR_B OUT 1",
@@ -98,6 +93,36 @@
 		regulator-max-microvolt = <800000>;
 		vin-supply = <&ao_5v>;
 		regulator-always-on;
+	};
+};
+
+&i2c3 {
+	status = "okay";
+
+	/* Mainline u-boot lacks TCA6507 driver. Currently only using bootloader, TCA6507 LEDs works. */
+	tca6507@45 {
+		compatible = "ti,tca6507", "leds,tca6507";
+		reg = <0x45>;
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gpio-controller;
+		#gpio-cells = <2>;
+
+		led@red {
+			reg = <0x00>;
+			linux,default-trigger = "heartbeat";
+		};
+
+		led@green {
+			reg = <0x01>;
+			linux,default-trigger = "heartbeat";
+		};
+
+		led@blue {
+			reg = <0x02>;
+			linux,default-trigger = "none";
+		};
 	};
 };
 
@@ -168,7 +193,7 @@
 };
 
 &ir {
-	linux,rc-map-name = "rc-x96max";
+	status = "disabled";
 };
 
 &tdmif_b {
@@ -190,11 +215,17 @@
 	uart-has-rtscts;
 
 	bluetooth: bluetooth {
-		compatible = "mediatek,mt7921s-bluetooth";
-		reset-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
-		host-wake-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-		current-speed = <921600>;
-		vcc-supply = <&vddao_3v3>;
+		compatible = "realtek,rtl8822cs-bt";
+		interrupt-parent = <&gpio_intc>;
+		interrupts = <95 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "host-wakeup";
+		shutdown-gpios = <&gpio GPIOX_17 GPIO_ACTIVE_HIGH>;
+		max-speed = <2000000>;
+		clocks = <&wifi32k>;
+		clock-names = "lpo";
+		vbat-supply = <&vddao_3v3>;
+		vddio-supply = <&vddio_ao1v8>;
+		status = "disabled";
 	};
 };
 
@@ -208,27 +239,22 @@
 
 /* SDIO */
 &sd_emmc_a {
-	/delete-property/ sd-uhs-sdr104;
 	sd-uhs-sdr12;
 	sd-uhs-sdr25;
+	sd-uhs-ddr50;
 	sd-uhs-sdr50;
-	max-frequency = <100000000>;
-
-        //sd-uhs-ddr50;
-	//max-frequency = <50000000>;
-
-	//sd-uhs-sdr104;
-	//max-frequency = <200000000>;
+	sd-uhs-sdr104;
+	max-frequency = <208000000>;
 };
 
 /* SD card */
 &sd_emmc_b {
-	cap-sd-highspeed;
-	max-frequency = <50000000>;
+	status = "disabled";
 };
 
 /* eMMC */
 &sd_emmc_c {
+	mmc-sdr-1_8v;
 	max-frequency = <200000000>;
 };
 
