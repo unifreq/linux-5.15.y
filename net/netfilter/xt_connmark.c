@@ -56,7 +56,10 @@ connmark_tg_shift(struct sk_buff *skb, const struct xt_connmark_tginfo3 *info)
 
 			newmark = (oldmark & ~info->ctmark) |
 				  (info->ctmask | (dscp << info->shift_bits));
+		} else {
+			newmark = oldmark;
 		}
+
 		if (READ_ONCE(ct->mark) != newmark) {
 			WRITE_ONCE(ct->mark, newmark);
 			nf_conntrack_event_cache(IPCT_MARK, ct);
