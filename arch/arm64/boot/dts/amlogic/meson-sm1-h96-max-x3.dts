@@ -171,10 +171,12 @@
 
 	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
 	pinctrl-names = "default";
-	phy-mode = "rgmii-txid";
+	//phy-mode = "rgmii-txid";
+	phy-mode = "rgmii";
+	amlogic,tx-delay-ns = <2>;
 	phy-handle = <&external_phy>;
 
-	rx-internal-delay-ps = <800>;
+	//rx-internal-delay-ps = <800>;
 
 	snps,aal;
 	snps,rxpbl = <0x8>;
