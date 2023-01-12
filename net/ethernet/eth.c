@@ -612,23 +612,26 @@ static struct nvmem_cell_mac_address_property {
  */
 int nvmem_get_mac_address(struct device *dev, void *addrbuf)
 {
+	struct nvmem_cell_mac_address_property *property;
 	struct nvmem_cell *cell;
 	const void *mac;
-	struct nvmem_cell_mac_address_property *property;
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(nvmem_cell_mac_address_properties); i++) {
 		property = &nvmem_cell_mac_address_properties[i];
 		cell = nvmem_cell_get(dev, property->name);
-		if (IS_ERR(cell)) {
-			if (i == ARRAY_SIZE(nvmem_cell_mac_address_properties) - 1)
-				return PTR_ERR(cell);
-			continue;
-		}
-		mac = property->read(cell);
-		nvmem_cell_put(cell);
-		break;
+		/* For -EPROBE_DEFER don't try other properties. We'll get back to this one. */
+		if (!IS_ERR(cell) || PTR_ERR(cell) == -EPROBE_DEFER)
+			break;
 	}
+
+	if (IS_ERR(cell))
+		return PTR_ERR(cell);
+
+	mac = property->read(cell);
+	nvmem_cell_put(cell);
+	if (IS_ERR(mac))
+		return PTR_ERR(mac);
 
 	if (!is_valid_ether_addr(mac)) {
 		kfree(mac);
