@@ -31,6 +31,7 @@ dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6b1.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6b-plus.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6b-plus-oc.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6b1.dtb
+dtb-$(CONFIG_ARCH_MESON) += meson-g12b-ugoos-am6b-plus-by-vuong-vn.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxbb-kii-pro.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxbb-beelink-mini-mx.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxbb-beelink-mini-mxiii.dtb
