@@ -113,22 +113,7 @@ config R8169
 	  To compile this driver as a module, choose M here: the module
 	  will be called r8169.  This is recommended.
 
-config R8125
-	tristate "Realtek 8125A/8125B/8168KB ethernet support by vendor"
-	depends on PCI
-	select FW_LOADER
-	select CRC32
-	select PHYLIB
-	select REALTEK_PHY
-	help
-	  Say Y here if you have a Realtek Ethernet adapter belonging to
-	  the following families:
-	  RTL8125A 2.5GBit Ethernet
-	  RTL8125B 2.5GBit Ethernet
-	  RTL8168KB 2.5GBit Ethernet
-
-	  To compile this driver as a module, choose M here: the module
-	  will be called r8125.  This is recommended.
+source "drivers/net/ethernet/realtek/r8125_vendor/Kconfig"
 
 config R8168
 	tristate "Realtek 8111/8411/8168 ethernet support by vendor"
