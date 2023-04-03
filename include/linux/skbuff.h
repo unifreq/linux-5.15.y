@@ -567,6 +567,7 @@ struct skb_shared_info {
 	 * Warning : all fields before dataref are cleared in __alloc_skb()
 	 */
 	atomic_t	dataref;
+	unsigned int	xdp_frags_size;
 
 	/* Intermediate layers must ensure that destructor_arg
 	 * remains valid until skb destructor */
@@ -2824,7 +2825,7 @@ static inline int pskb_network_may_pull(struct sk_buff *skb, unsigned int len)
  * NET_IP_ALIGN(2) + ethernet_header(14) + IP_header(20/40) + ports(8)
  */
 #ifndef NET_SKB_PAD
-#define NET_SKB_PAD	max(64, L1_CACHE_BYTES)
+#define NET_SKB_PAD	max(32, L1_CACHE_BYTES)
 #endif
 
 int ___pskb_trim(struct sk_buff *skb, unsigned int len);

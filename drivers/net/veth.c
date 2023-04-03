@@ -501,7 +501,7 @@ static int veth_xdp_xmit(struct net_device *dev, int n,
 		struct xdp_frame *frame = frames[i];
 		void *ptr = veth_xdp_to_ptr(frame);
 
-		if (unlikely(frame->len > max_len ||
+		if (unlikely(xdp_get_frame_len(frame) > max_len ||
 			     __ptr_ring_produce(&rq->xdp_ring, ptr)))
 			break;
 		nxmit++;
@@ -862,7 +862,7 @@ static int veth_xdp_rcv(struct veth_rq *rq, int budget,
 			/* ndo_xdp_xmit */
 			struct xdp_frame *frame = veth_ptr_to_xdp(ptr);
 
-			stats->xdp_bytes += frame->len;
+			stats->xdp_bytes += xdp_get_frame_len(frame);
 			frame = veth_xdp_rcv_one(rq, frame, bq, stats);
 			if (frame) {
 				/* XDP_PASS */
@@ -1471,9 +1471,14 @@ static int veth_xdp_set(struct net_device *dev, struct bpf_prog *prog,
 			goto err;
 		}
 
-		max_mtu = PAGE_SIZE - VETH_XDP_HEADROOM -
-			  peer->hard_header_len -
-			  SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
+		max_mtu = SKB_WITH_OVERHEAD(PAGE_SIZE - VETH_XDP_HEADROOM) -
+			  peer->hard_header_len;
+		/* Allow increasing the max_mtu if the program supports
+		 * XDP fragments.
+		 */
+		//if (prog->aux->xdp_has_frags)
+		max_mtu += PAGE_SIZE * MAX_SKB_FRAGS;
+
 		if (peer->mtu > max_mtu) {
 			NL_SET_ERR_MSG_MOD(extack, "Peer MTU is too large to set XDP");
 			err = -ERANGE;
