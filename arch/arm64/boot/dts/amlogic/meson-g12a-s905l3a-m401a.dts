@@ -137,15 +137,15 @@
 		opp-microvolt = <871000>;
 	};
 
-	opp-1804000000 {
-		opp-hz = /bits/ 64 <1804000000>;
+	opp-1704000000 {
+		opp-hz = /bits/ 64 <1704000000>;
 		//opp-microvolt = <861000>;
 		opp-microvolt = <921000>;
 	};
 	
 	/* some soc has crash under 1800 */
-	opp-1900000000 {
-		opp-hz = /bits/ 64 <1900000000>;
+	opp-1800000000 {
+		opp-hz = /bits/ 64 <1800000000>;
 		opp-microvolt = <981000>;
 		status = "disabled";
 	};
