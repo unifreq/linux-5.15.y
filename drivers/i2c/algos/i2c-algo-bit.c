@@ -184,8 +184,9 @@ static int i2c_outb(struct i2c_adapter *i2c_adap, unsigned char c)
 
 	/* read ack: SDA should be pulled down by slave, or it may
 	 * NAK (usually to report problems with the data we wrote).
+	 * Report ACK if SDA is write-only.
 	 */
-	ack = !getsda(adap);    /* ack: sda is pulled low -> success */
+	ack = !adap->getsda || !getsda(adap); /* ack: sda is pulled low -> success */
 	bit_dbg(2, &i2c_adap->dev, "i2c_outb: 0x%02x %s\n", (int)c,
 		ack ? "A" : "NA");
 
@@ -202,6 +203,9 @@ static int i2c_inb(struct i2c_adapter *i2c_adap)
 	int i;
 	unsigned char indata = 0;
 	struct i2c_algo_bit_data *adap = i2c_adap->algo_data;
+
+	if (!adap->getsda)
+		return -EOPNOTSUPP;
 
 	/* assert: scl is low */
 	sdahi(adap);
@@ -231,6 +235,10 @@ static int test_bus(struct i2c_adapter *i2c_adap)
 	struct i2c_algo_bit_data *adap = i2c_adap->algo_data;
 	const char *name = i2c_adap->name;
 	int scl, sda, ret;
+
+	/* Testing not possible if both pins are write-only. */
+	if (adap->getscl == NULL && adap->getsda == NULL)
+		return 0;
 
 	if (adap->pre_xfer) {
 		ret = adap->pre_xfer(i2c_adap);
@@ -670,8 +678,11 @@ static int __i2c_bit_add_bus(struct i2c_adapter *adap,
 	if (ret < 0)
 		return ret;
 
-	/* Complain if SCL can't be read */
-	if (bit_adap->getscl == NULL) {
+	if (bit_adap->getscl == NULL && bit_adap->getsda == NULL)
+		dev_info(&adap->dev, "I2C-like interface, SDA and SCL are write-only\n");
+	else if (bit_adap->getscl == NULL) {
+		/* Complain if SCL can't be read */
+		if (bit_adap->getscl == NULL) {
 		dev_warn(&adap->dev, "Not I2C compliant: can't read SCL\n");
 		dev_warn(&adap->dev, "Bus may be unreliable\n");
 	}
