@@ -204,6 +204,13 @@ config TM1628
 	  It's a 3-wire SPI device controlling a two-dimensional grid of
 	  LEDs. Dimming is applied to all outputs through an internal PWM.
 
+config FD6551
+	tristate "FD6551 driver for LED 7 segment displays"
+	depends on I2C_GPIO
+	depends on OF || COMPILE_TEST
+	help
+	  Say Y to enable support for FD6551
+	  
 config OPENVFD
 	tristate "OpenVFD LED display driver"
 	depends on SPI
