@@ -992,6 +992,8 @@ static irqreturn_t meson_mmc_irq(int irq, void *dev_id)
 	meson_mmc_read_resp(host->mmc, cmd);
 
 	if (status & (IRQ_END_OF_CHAIN | IRQ_RESP_STATUS)) {
+		struct mmc_data *data = cmd->data;
+
 		if (data && !cmd->error)
 			data->bytes_xfered = data->blksz * data->blocks;
 		if (meson_mmc_bounce_buf_read(data) ||
