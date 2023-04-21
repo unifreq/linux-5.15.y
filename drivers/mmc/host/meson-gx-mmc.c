@@ -447,6 +447,12 @@ static int meson_mmc_clk_init(struct meson_host *host)
 			return dev_err_probe(host->dev, PTR_ERR(clk),
 					     "Missing clock %s\n", name);
 
+		/* clkin0 hierarchy includes dividers and muxes, and bootloader
+		 * may have left whatever settings. Set to XTAL rate.
+		 */
+		if (i == 0)
+			clk_set_rate(clk, 24000000);
+
 		mux_parent_names[i] = __clk_get_name(clk);
 	}
 
