@@ -100,6 +100,7 @@ struct amlogic_thermal {
 	const struct amlogic_thermal_data *data;
 	struct regmap *regmap;
 	struct regmap *sec_ao_map;
+	void __iomem *trim_info_reg;
 	struct clk *clk;
 	struct thermal_zone_device *tzd;
 	u32 trim_info;
@@ -143,8 +144,11 @@ static int amlogic_thermal_initialize(struct amlogic_thermal *pdata)
 	int ret = 0;
 	int ver;
 
-	regmap_read(pdata->sec_ao_map, pdata->data->u_efuse_off,
-		    &pdata->trim_info);
+	if (!IS_ERR(pdata->trim_info_reg))
+		pdata->trim_info = readl(pdata->trim_info_reg);
+	else
+		regmap_read(pdata->sec_ao_map, pdata->data->u_efuse_off,
+			    &pdata->trim_info);
 
 	ver = TSENSOR_TRIM_VERSION(pdata->trim_info);
 
@@ -288,11 +292,14 @@ static int amlogic_thermal_probe(struct platform_device *pdev)
 		return PTR_ERR(pdata->clk);
 	}
 
-	pdata->sec_ao_map = syscon_regmap_lookup_by_phandle
-		(pdev->dev.of_node, "amlogic,ao-secure");
-	if (IS_ERR(pdata->sec_ao_map)) {
-		dev_err(dev, "syscon regmap lookup failed.\n");
-		return PTR_ERR(pdata->sec_ao_map);
+	pdata->trim_info_reg = devm_platform_ioremap_resource(pdev, 1);
+	if (IS_ERR(pdata->trim_info_reg)) {
+		pdata->sec_ao_map = syscon_regmap_lookup_by_phandle
+			(pdev->dev.of_node, "amlogic,ao-secure");
+		if (IS_ERR(pdata->sec_ao_map)) {
+			dev_err(dev, "syscon regmap lookup failed.\n");
+			return PTR_ERR(pdata->sec_ao_map);
+		}
 	}
 
 	pdata->tzd = devm_thermal_zone_of_sensor_register(&pdev->dev,
