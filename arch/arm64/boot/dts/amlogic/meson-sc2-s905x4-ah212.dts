@@ -1,0 +1,500 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2019 Amlogic, Inc. All rights reserved.
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+#include "meson-sc2.dtsi"
+
+/ {
+	model = "Amlogic SC2 AH212 ";
+	compatible = "amlogic,sc2";
+	interrupt-parent = <&gic>;
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	aliases {
+		serial0 = &uart_B;
+		serial1 = &uart_E;
+		serial2 = &uart_C;
+		serial3 = &uart_D;
+		serial4 = &uart_A;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c2 = &i2c2;
+		i2c3 = &i2c3;
+		i2c4 = &i2c4;
+		spi1 = &spicc0;
+		spi2 = &spicc1;
+	};
+
+	memory {
+		device_type = "memory";
+		linux,usable-memory = <0x0 0x000000 0x0 0x80000000>;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	emmc_pwrseq: emmc-pwrseq {
+		compatible = "mmc-pwrseq-emmc";
+		reset-gpios = <&gpio GPIOB_12 GPIO_ACTIVE_LOW>;
+	};
+
+	wifi32k: wifi32k {
+		compatible = "pwm-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
+	};
+
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
+		clocks = <&wifi32k>;
+		clock-names = "ext_clock";
+	};
+
+	vdd_3v3: regulator-vdd_3v3 {
+                compatible = "regulator-fixed";
+                regulator-name = "VDD_3V3";
+                regulator-min-microvolt = <3300000>;
+                regulator-max-microvolt = <3300000>;
+        };
+
+	vdd_1v8: regulator-vdd_1v8 {
+                compatible = "regulator-fixed";
+                regulator-name = "VDD_1V8";
+                regulator-min-microvolt = <1800000>;
+                regulator-max-microvolt = <1800000>;
+        };
+
+	vbus_pwr: regulator-vbus_pwr {
+		compatible = "regulator-fixed";
+		regulator-name = "VBUS_PWR";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+//		vin-supply = <&vcc_5v>;
+
+		gpio = <&gpio GPIOH_6 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		/* 16 MiB reserved for Hardware ROM Firmware */
+		hwrom_reserved: hwrom@0 {
+			reg = <0x0 0x0 0x0 0x1000000>;
+			no-map;
+		};
+
+		/* Reserved for ARM Trusted Firmware (BL31) */
+		secmon_reserved1: secmon@10000000 {
+			reg = <0x0 0x10000000 0x0 0x200000>;
+			no-map;
+		};
+
+		/* Reserved for ARM Trusted Firmware (BL31) */
+		secmon_reserved2: secmon@5000000 {
+			reg = <0x0 0x05000000 0x0 0x3400000>;
+			no-map;
+		};
+
+		linux,cma {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x0 0xbc00000>;
+			alignment = <0x0 0x400000>;
+			linux,cma-default;
+		};
+
+	};
+
+	cpu_opp_table0: cpu_opp_table0 {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <779000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <779000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <779000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <667000000>;
+			opp-microvolt = <799000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <799000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <809000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <839000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <849000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <879000>;
+		};
+		opp09 {
+			opp-hz = /bits/ 64 <1704000000>;
+			opp-microvolt = <919000>;
+		};
+		opp10 {
+			opp-hz = /bits/ 64 <1800000000>;
+			opp-microvolt = <959000>;
+		};
+		opp11 {
+			opp-hz = /bits/ 64 <1908000000>;
+			opp-microvolt = <989000>;
+		};
+		opp12 {
+			opp-hz = /bits/ 64 <2004000000>;
+			opp-microvolt = <1019000>;
+		};
+	};
+
+	cpufreq-meson {
+		compatible = "amlogic,cpufreq-meson";
+		status = "okay";
+	};
+
+	i2c-led {
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio GPIOA_14 GPIO_ACTIVE_HIGH>;
+		i2c-gpio,sda-output-only;
+		scl-gpios = <&gpio GPIOA_15 GPIO_ACTIVE_HIGH>;
+		i2c-gpio,scl-output-only;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		disp_7seg@24 {
+			compatible = "fudahisi,fd6551";
+			reg = <0x24>, <0x37>, <0x36>, <0x35>, <0x34>, <0x33>;
+			reg-names = "cmd", "grid_0", "grid_1", "grid_2", "grid_3", "symbols";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			fudahisi,segment-mapping = /bits/ 8 <0 1 2 3 4 5 6>;
+
+			led@0 {
+				reg = <0>;
+				function = LED_FUNCTION_ALARM;
+			};
+
+			led@1 {
+				reg = <1>;
+				function = LED_FUNCTION_USB;
+			};
+
+			led@2 {
+				reg = <2>;
+				function = "pause";
+			};
+
+			led@3 {
+				reg = <3>;
+				function = "play";
+			};
+
+			led@4 {
+				reg = <4>;
+				function = "colon";
+			};
+
+			led@5 {
+				reg = <5>;
+				function = LED_FUNCTION_LAN;
+			};
+
+			led@6 {
+				reg = <6>;
+				function = LED_FUNCTION_WLAN;
+			};
+		};
+	};
+};
+
+&pwm_ij {
+	status = "okay";
+};
+
+&i2c2 {
+	status = "okay";
+	pinctrl-names="default";
+	pinctrl-0=<&i2c2_pins3>;
+	clock-frequency = <300000>;
+};
+
+&i2c3 {
+	status = "okay";
+	pinctrl-names="default";
+	pinctrl-0=<&i2c3_pins2>;
+	clock-frequency = <300000>; /* default 100k */
+};
+
+&vddcpu0 {
+	status = "okay";
+};
+
+&periphs_pinctrl {
+	tdm_a: tdm_a {
+		mux { /* GPIOX_11, GPIOX_10, GPIOX_8, GPIOX_9 */
+			groups = "tdm_sclk0",
+				"tdm_fs0",
+				"tdm_d3",
+				"tdm_d4";
+			function = "tdm";
+		};
+	};
+
+	tdmin_a: tdmin_a {
+		mux { /* GPIOX_8 */
+			groups = "tdma_din1";
+			function = "tdma_in";
+		};
+	};
+
+	tdmb_mclk: tdmb_mclk {
+		mux {
+			groups = "mclk0_a";
+			function = "mclk0";
+		};
+	};
+	tdmout_b: tdmout_b {
+		mux { /* GPIOA_1, GPIOA_2, GPIOA_3 */
+			groups = "tdmb_sclk",
+				"tdmb_fs",
+				"tdmb_dout0";
+			function = "tdmb_out";
+		};
+	};
+
+	tdmin_b:tdmin_b {
+		mux { /* GPIOA_4 */
+			groups = "tdmb_din1"
+				/*,"tdmb_slv_sclk", "tdmb_slv_fs"*/;
+			function = "tdmb_in";
+		};
+	};
+
+	tdmc_mclk: tdmc_mclk {
+		mux { /* GPIOA_11 */
+			groups = "mclk1_a";
+			function = "mclk1";
+		};
+	};
+
+	tdmout_c:tdmout_c {
+		mux { /* GPIOA_12, GPIOA_13 */
+			groups = "tdmc_sclk_a",
+				"tdmc_fs_a"
+				/*, "tdmc_dout0_a"
+				 *,	"tdmc_dout2"
+				 *, "tdmc_dout3"
+				 */;
+			function = "tdmc_out";
+		};
+	};
+
+	tdmin_c:tdmin_c {
+		mux { /* GPIOA_10 */
+			groups = "tdmc_din0_a";
+			function = "tdmc_in";
+		};
+	};
+
+	spdifin: spdifin {
+		mux {/* GPIOH_5 */
+			groups = "spdif_in_h";
+			function = "spdif_in";
+		};
+	};
+
+	pdmin: pdmin {
+		mux { /* GPIOC_0, GPIOC_4 */
+			groups = "pdm_din0_c",
+				"pdm_dclk_c";
+			function = "pdm";
+		};
+	};
+
+	spdifout: spdifout {
+		mux { /* GPIOD_10 */
+			groups = "spdif_out_d";
+			function = "spdif_out";
+		};
+	};
+
+	spdifout_a_mute: spdifout_a_mute {
+		mux { /* GPIOD_10 */
+			groups = "GPIOD_10";
+			function = "gpio_periphs";
+			output-low;
+		};
+	};
+
+	dvb_s_ts0_pins: dvb_s_ts0_pins {
+		tsin_a {
+			groups = "tsin_a_sop_d",
+				"tsin_a_valid_d",
+				"tsin_a_clk_d",
+				"tsin_a_din0_d";
+			function = "tsin_a";
+		};
+	};
+
+	dvb_s_ts1_pins: dvb_s_ts1_pins {
+		tsin_b {
+			groups = "tsin_b_sop",
+				"tsin_b_valid",
+				"tsin_b_clk",
+				"tsin_b_din0";
+			function = "tsin_b";
+		};
+	};
+
+	dvb_s_ts2_pins: dvb_s_ts2_pins {
+		tsin_c {
+			groups = "tsin_c_sop_z",
+				"tsin_c_valid_z",
+				"tsin_c_clk_z",
+				"tsin_c_din0_z";
+			function = "tsin_c";
+		};
+	};
+
+	dvb_s_ts3_pins: dvb_s_ts3_pins {
+		tsin_d {
+			groups = "tsin_d_sop_z",
+				"tsin_d_valid_z",
+				"tsin_d_clk_z",
+				"tsin_d_din0_z";
+			function = "tsin_d";
+		};
+	};
+}; /* end of periphs_pinctrl */
+
+&usb {
+	status = "okay";
+};
+
+/* SDIO */
+&sd_emmc_a {
+	status = "okay";
+	pinctrl-0 = <&sdio_pins>;
+	pinctrl-1 = <&sdio_clk_gate_pins>;
+	pinctrl-names = "default", "clk-gate";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	bus-width = <4>;
+	cap-sd-highspeed;
+	sd-uhs-sdr50;
+	sd-uhs-ddr50;
+	sd-uhs-sdr104;
+	max-frequency = <200000000>;
+
+	non-removable;
+	disable-wp;
+
+	mmc-pwrseq = <&sdio_pwrseq>;
+	vmmc-supply = <&vdd_3v3>;
+	vqmmc-supply = <&vdd_1v8>;
+};
+
+/* SD card */
+&sd_emmc_b {
+	status = "okay";
+	pinctrl-0 = <&sdcard_pins>;
+	pinctrl-1 = <&sdcard_clk_gate_pins>;
+	pinctrl-names = "sd_default", "clk-gate";
+
+	bus-width = <4>;
+	cap-sd-highspeed;
+	max-frequency = <200000000>;
+	disable-wp;
+
+	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_HIGH>;
+	cd-inverted;
+	vmmc-supply = <&vdd_3v3>;
+	vqmmc-supply = <&vdd_1v8>;
+};
+
+&sd_emmc_c {
+	status = "okay";
+	pinctrl-0 = <&emmc_pins>, <&emmc_ds_pins>;
+	pinctrl-1 = <&emmc_clk_gate_pins>;
+	pinctrl-names = "default", "clk-gate";
+
+	bus-width = <8>;
+	cap-mmc-highspeed;
+	mmc-ddr-1_8v;
+	mmc-hs200-1_8v;
+	mmc-hs400-1_8v;
+	max-frequency = <200000000>;
+	non-removable;
+	disable-wp;
+
+	mmc-pwrseq = <&emmc_pwrseq>;
+	vmmc-supply = <&vdd_3v3>;
+	vqmmc-supply = <&vdd_1v8>;
+};
+
+&saradc {
+	status = "okay";
+};
+
+&ethmac {
+	status = "okay";
+	phy-handle = <&internal_ephy>;
+	phy-mode = "rmii";
+};
+
+&spicc0 {
+	status = "disabled";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spicc0_pins_x>;
+	cs-gpios = <&gpio GPIOX_10 0>;
+};
+
+&spicc1 {
+	status = "disabled";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spicc1_pins_h>;
+	cs-gpios = <&gpio GPIOH_6 0>;
+};
+
+&pwm_ef {
+	pinctrl-0 = <&pwm_e_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&uart_E {
+	status = "okay";
+	uart-has-rtscts;
+};
