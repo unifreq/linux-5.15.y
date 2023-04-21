@@ -61,4 +61,10 @@ config PINCTRL_MESON_A1
 	select PINCTRL_MESON_AXG_PMX
 	default y
 
+config PINCTRL_MESON_SC2
+	tristate "Meson sc2 Soc pinctrl driver"
+	depends on ARM64
+	select PINCTRL_MESON_AXG_PMX
+	default y
+	
 endif
