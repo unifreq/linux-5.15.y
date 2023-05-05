@@ -1,0 +1,7 @@
+- name: Compile the kernel
+  uses: lcapriotti/linux-5.15.y@main
+  with:
+    build_target: kernel
+    kernel_version: 5.15.100
+    kernel_auto: true
+    kernel_sign: -lcapriotti
