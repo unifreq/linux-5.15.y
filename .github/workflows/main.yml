@@ -46,7 +46,7 @@ on:
         type: choice
         options:
           - -ophub
-          - -yourname
+          - -lcapriotti
 
 env:
   TZ: America/New_York
