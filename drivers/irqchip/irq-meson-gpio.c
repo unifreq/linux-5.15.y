@@ -93,8 +93,7 @@ struct meson_gpio_irq_params {
 
 #define INIT_MESON_S4_COMMON_DATA(irqs)				\
 	INIT_MESON_COMMON(irqs, meson_a1_gpio_irq_init,		\
-			  meson_a1_gpio_irq_sel_pin,		\
-			  meson_s4_gpio_irq_set_type)		\
+			  meson_a1_gpio_irq_sel_pin)		\
 	.support_edge_both = true,				\
 	.edge_both_offset = 0,					\
 	.edge_single_offset = 12,				\
