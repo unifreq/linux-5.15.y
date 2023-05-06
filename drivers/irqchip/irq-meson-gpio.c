@@ -99,7 +99,6 @@ struct meson_gpio_irq_params {
 	.edge_single_offset = 12,				\
 	.pol_low_offset = 0,					\
 	.pin_sel_mask = 0xff,					\
-	.nr_channels = 12,
 
 static const struct meson_gpio_irq_params meson8_params = {
 	INIT_MESON8_COMMON_DATA(134)
