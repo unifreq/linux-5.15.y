@@ -7,7 +7,6 @@
 #include <linux/netdevice.h>
 #include <net/ip.h>
 #include <net/ip6_route.h>
-#include <net/netfilter/nf_tables.h>
 #include <net/netfilter/nf_flow_table.h>
 #include <net/netfilter/nf_conntrack.h>
 #include <net/netfilter/nf_conntrack_core.h>
@@ -380,8 +379,7 @@ flow_offload_lookup(struct nf_flowtable *flow_table,
 }
 EXPORT_SYMBOL_GPL(flow_offload_lookup);
 
-static int
-nf_flow_table_iterate(struct nf_flowtable *flow_table,
+int nf_flow_table_iterate(struct nf_flowtable *flow_table,
 		      void (*iter)(struct nf_flowtable *flowtable,
 				   struct flow_offload *flow, void *data),
 		      void *data)
@@ -435,6 +433,7 @@ static void nf_flow_offload_gc_step(struct nf_flowtable *flow_table,
 		nf_flow_offload_stats(flow_table, flow);
 	}
 }
+EXPORT_SYMBOL_GPL(nf_flow_table_iterate);
 
 void nf_flow_table_gc_run(struct nf_flowtable *flow_table)
 {
@@ -613,13 +612,41 @@ void nf_flow_table_free(struct nf_flowtable *flow_table)
 }
 EXPORT_SYMBOL_GPL(nf_flow_table_free);
 
+static int nf_flow_table_netdev_event(struct notifier_block *this,
+				      unsigned long event, void *ptr)
+{
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+
+	if (event != NETDEV_DOWN)
+		return NOTIFY_DONE;
+
+	nf_flow_table_cleanup(dev);
+
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block flow_offload_netdev_notifier = {
+	.notifier_call	= nf_flow_table_netdev_event,
+};
+
 static int __init nf_flow_table_module_init(void)
 {
-	return nf_flow_table_offload_init();
+	int ret;
+
+	ret = nf_flow_table_offload_init();
+	if (ret)
+		return ret;
+
+	ret = register_netdevice_notifier(&flow_offload_netdev_notifier);
+	if (ret)
+		nf_flow_table_offload_exit();
+
+	return ret;
 }
 
 static void __exit nf_flow_table_module_exit(void)
 {
+	unregister_netdevice_notifier(&flow_offload_netdev_notifier);
 	nf_flow_table_offload_exit();
 }
 

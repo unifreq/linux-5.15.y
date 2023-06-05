@@ -26,7 +26,7 @@ CFLAGS += -g -O0 -rdynamic -Wall $(GENFLAGS) $(SAN_CFLAGS)		\
 	  -I$(TOOLSINCDIR) -I$(APIDIR) -I$(OUTPUT)			\
 	  -Dbpf_prog_load=bpf_prog_test_load				\
 	  -Dbpf_load_program=bpf_test_load_program
-LDLIBS += -lcap -lelf -lz -lrt -lpthread
+LDLIBS += -lelf -lz -lrt -lpthread
 
 # Silence some warnings when compiled with clang
 ifneq ($(LLVM),)
@@ -189,16 +189,27 @@ TEST_GEN_PROGS_EXTENDED += $(DEFAULT_BPFTOOL)
 
 $(TEST_GEN_PROGS) $(TEST_GEN_PROGS_EXTENDED): $(OUTPUT)/test_stub.o $(BPFOBJ)
 
-$(OUTPUT)/test_dev_cgroup: cgroup_helpers.c
-$(OUTPUT)/test_skb_cgroup_id_user: cgroup_helpers.c
-$(OUTPUT)/test_sock: cgroup_helpers.c
-$(OUTPUT)/test_sock_addr: cgroup_helpers.c
-$(OUTPUT)/test_sockmap: cgroup_helpers.c
-$(OUTPUT)/test_tcpnotify_user: cgroup_helpers.c trace_helpers.c
-$(OUTPUT)/get_cgroup_id_user: cgroup_helpers.c
-$(OUTPUT)/test_cgroup_storage: cgroup_helpers.c
-$(OUTPUT)/test_sock_fields: cgroup_helpers.c
-$(OUTPUT)/test_sysctl: cgroup_helpers.c
+CGROUP_HELPERS	:= $(OUTPUT)/cgroup_helpers.o
+TESTING_HELPERS	:= $(OUTPUT)/testing_helpers.o
+TRACE_HELPERS	:= $(OUTPUT)/trace_helpers.o
+CAP_HELPERS	:= $(OUTPUT)/cap_helpers.o
+
+$(OUTPUT)/test_dev_cgroup: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_skb_cgroup_id_user: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_sock: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_sock_addr: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_sockmap: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_tcpnotify_user: $(CGROUP_HELPERS) $(TESTING_HELPERS) $(TRACE_HELPERS)
+$(OUTPUT)/get_cgroup_id_user: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_cgroup_storage: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_sock_fields: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_sysctl: $(CGROUP_HELPERS) $(TESTING_HELPERS)
+$(OUTPUT)/test_tag: $(TESTING_HELPERS)
+$(OUTPUT)/test_lirc_mode2_user: $(TESTING_HELPERS)
+$(OUTPUT)/xdping: $(TESTING_HELPERS)
+$(OUTPUT)/flow_dissector_load: $(TESTING_HELPERS)
+$(OUTPUT)/test_maps: $(TESTING_HELPERS)
+$(OUTPUT)/test_verifier: $(TESTING_HELPERS) $(CAP_HELPERS)
 
 BPFTOOL ?= $(DEFAULT_BPFTOOL)
 $(DEFAULT_BPFTOOL): $(wildcard $(BPFTOOLDIR)/*.[ch] $(BPFTOOLDIR)/Makefile)    \
@@ -460,7 +471,8 @@ TRUNNER_TESTS_DIR := prog_tests
 TRUNNER_BPF_PROGS_DIR := progs
 TRUNNER_EXTRA_SOURCES := test_progs.c cgroup_helpers.c trace_helpers.c	\
 			 network_helpers.c testing_helpers.c		\
-			 btf_helpers.c	flow_dissector_load.h
+			 btf_helpers.c flow_dissector_load.h		\
+			 cap_helpers.c
 TRUNNER_EXTRA_FILES := $(OUTPUT)/urandom_read $(OUTPUT)/bpf_testmod.ko	\
 		       ima_setup.sh					\
 		       $(wildcard progs/btf_dump_test_case_*.c)
