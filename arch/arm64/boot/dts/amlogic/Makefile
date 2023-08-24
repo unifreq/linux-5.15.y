@@ -128,4 +128,5 @@ dtb-$(CONFIG_ARCH_MESON) += meson-sm1-tx3-qz.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-tx3-qz-oc.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-a1-ad401.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxl-s905x-tx9.dtb
+dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x88-pro-x3.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-sm1-x96-max-plus-2101.dtb
