@@ -1715,8 +1715,7 @@ static struct nbd_device *nbd_dev_add(int index, unsigned int refs)
 		if (err == -ENOSPC)
 			err = -EEXIST;
 	} else {
-		err = idr_alloc(&nbd_index_idr, nbd, 0,
-				(MINORMASK >> part_shift) + 1, GFP_KERNEL);
+		err = idr_alloc(&nbd_index_idr, nbd, 0, 0, GFP_KERNEL);
 		if (err >= 0)
 			index = err;
 	}

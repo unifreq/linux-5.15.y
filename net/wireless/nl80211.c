@@ -3737,7 +3737,6 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
 			if_idx++;
 		}
 
-		if_start = 0;
 		wp_idx++;
 	}
  out:
