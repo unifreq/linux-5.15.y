@@ -145,8 +145,8 @@ static inline bool dev_xmit_complete(int rc)
 
 #if defined(CONFIG_HYPERV_NET)
 # define LL_MAX_HEADER 128
-#elif defined(CONFIG_WLAN) || IS_ENABLED(CONFIG_AX25) || 1
-# if defined(CONFIG_MAC80211_MESH) || 1
+#elif defined(CONFIG_WLAN) || IS_ENABLED(CONFIG_AX25)
+# if defined(CONFIG_MAC80211_MESH)
 #  define LL_MAX_HEADER 128
 # else
 #  define LL_MAX_HEADER 96
@@ -1674,10 +1674,6 @@ enum netdev_priv_flags {
 	IFF_TX_SKB_NO_LINEAR		= BIT_ULL(31),
 };
 
-enum netdev_extra_priv_flags {
-	IFF_NO_IP_ALIGN			= 1<<0,
-};
-
 #define IFF_802_1Q_VLAN			IFF_802_1Q_VLAN
 #define IFF_EBRIDGE			IFF_EBRIDGE
 #define IFF_BONDING			IFF_BONDING
@@ -1710,7 +1706,6 @@ enum netdev_extra_priv_flags {
 #define IFF_L3MDEV_RX_HANDLER		IFF_L3MDEV_RX_HANDLER
 #define IFF_LIVE_RENAME_OK		IFF_LIVE_RENAME_OK
 #define IFF_TX_SKB_NO_LINEAR		IFF_TX_SKB_NO_LINEAR
-#define IFF_NO_IP_ALIGN			IFF_NO_IP_ALIGN
 
 /* Specifies the type of the struct net_device::ml_priv pointer */
 enum netdev_ml_priv_type {
@@ -2011,7 +2006,6 @@ struct net_device {
 	/* Read-mostly cache-line for fast-path access */
 	unsigned int		flags;
 	unsigned int		priv_flags;
-	unsigned int		extra_priv_flags;
 	const struct net_device_ops *netdev_ops;
 	int			ifindex;
 	unsigned short		gflags;
@@ -2072,11 +2066,6 @@ struct net_device {
 	const struct tlsdev_ops *tlsdev_ops;
 #endif
 
-#ifdef CONFIG_ETHERNET_PACKET_MANGLE
-	void (*eth_mangle_rx)(struct net_device *dev, struct sk_buff *skb);
-	struct sk_buff *(*eth_mangle_tx)(struct net_device *dev, struct sk_buff *skb);
-#endif
-
 	const struct header_ops *header_ops;
 
 	unsigned char		operstate;
@@ -2103,8 +2092,6 @@ struct net_device {
 	struct netdev_hw_addr_list	uc;
 	struct netdev_hw_addr_list	mc;
 	struct netdev_hw_addr_list	dev_addrs;
-
-	unsigned char		local_addr_mask[MAX_ADDR_LEN];
 
 #ifdef CONFIG_SYSFS
 	struct kset		*queues_kset;
@@ -2146,10 +2133,6 @@ struct net_device {
 #endif
 #if IS_ENABLED(CONFIG_MCTP)
 	struct mctp_dev __rcu	*mctp_ptr;
-#endif
-
-#ifdef CONFIG_ETHERNET_PACKET_MANGLE
-	void			*phy_ptr; /* PHY device specific data */
 #endif
 
 /*
