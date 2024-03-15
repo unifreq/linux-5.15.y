@@ -971,13 +971,13 @@ static int tc_setup_etf(struct stmmac_priv *priv,
 		return -EOPNOTSUPP;
 	if (qopt->queue >= priv->plat->tx_queues_to_use)
 		return -EINVAL;
-	if (!(priv->dma_conf.tx_queue[qopt->queue].tbs & STMMAC_TBS_AVAIL))
+	if (!(priv->tx_queue[qopt->queue].tbs & STMMAC_TBS_AVAIL))
 		return -EINVAL;
 
 	if (qopt->enable)
-		priv->dma_conf.tx_queue[qopt->queue].tbs |= STMMAC_TBS_EN;
+		priv->tx_queue[qopt->queue].tbs |= STMMAC_TBS_EN;
 	else
-		priv->dma_conf.tx_queue[qopt->queue].tbs &= ~STMMAC_TBS_EN;
+		priv->tx_queue[qopt->queue].tbs &= ~STMMAC_TBS_EN;
 
 	netdev_info(priv->dev, "%s ETF for Queue %d\n",
 		    qopt->enable ? "enabled" : "disabled", qopt->queue);
