@@ -1,5 +1,5 @@
 config R8125
-        tristate "Realtek 8125A/8125B/8168KB ethernet support by vendor"
+        tristate "Realtek 8125A/8125B/8125BP/8125D/8168KB ethernet support by vendor"
         depends on PCI
         select FW_LOADER
         select CRC32
@@ -9,9 +9,8 @@ config R8125
         help
           Say Y here if you have a Realtek Ethernet adapter belonging to
           the following families:
-          RTL8125A 2.5GBit Ethernet
-          RTL8125B 2.5GBit Ethernet
-          RTL8168KB 2.5GBit Ethernet
+          RTL8125A/B/BP/D 2.5Gbps Ethernet
+          RTL8168KB 2.5Gbps Ethernet
 
           To compile this driver as a module, choose M here: the module
           will be called r8125.  This is recommended.
@@ -30,7 +29,8 @@ config R8125_REALWOW_SUPPORT
 	default n
         depends on R8125
         help
-          This enables Realtek RealWOW Technology.
+          This enables ENABLE_REALWOW_SUPPORT flag.
+	  Support Realtek RealWOW Technology.
 	  If unsure, say N.
 
 config R8125_DASH_SUPPORT
@@ -38,7 +38,8 @@ config R8125_DASH_SUPPORT
 	default n
         depends on R8125
         help
-          This enables Realtek Dash Management Console.
+          This enables ENABLE_DASH_SUPPORT flag.
+	  Support Realtek Dash Management Console.
 	  If unsure, say N.
 
 config R8125_DASH_PRINT_SUPPORT
@@ -47,7 +48,8 @@ config R8125_DASH_PRINT_SUPPORT
         depends on R8125
 	depends on R8125_DASH_SUPPORT
         help
-          This enables Realtek Dash Print.
+          This enables ENABLE_DASH_PRINTER_SUPPORT flag.
+	  Support Realtek Dash Print.
 	  If unsure, say N.
 
 config R8125_DOWN_SPEED_100
@@ -63,22 +65,36 @@ config R8125_ASPM
 	default y
         depends on R8125
         help
+	  This enables CONFIG_ASPM flag.
           Support Active-state power management (ASPM).
 	  If unsure, say Y.
 
-config R8125_S5WOL
-        bool "Support Wake On LAN"
+config R8125_WOL_SUPPORT
+        bool "Enable WOL Support"
 	default y
         depends on R8125
         help
-          Support Wake On LAN.
+	  If enabled, the DISABLE_WOL_SUPPORT is not set.
+	  Enable WOL Support.
+	  If unsure, say Y.
+
+config R8125_S5WOL
+        bool "Support Wake On LAN for S5"
+	default y
+        depends on R8125
+        depends on R8125_WOL_SUPPORT
+        help
+	  This enables ENABLE_S5WOL flag.
+          Support Wake On LAN for S5.
 	  If unsure, say Y.
 
 config R8125_S5_KEEP_CURR_MAC
         bool "keep mac on after shutdown"
 	default n
         depends on R8125
+        depends on R8125_WOL_SUPPORT
         help
+	  This enables ENABLE_S5_KEEP_CURR_MAC flag.
           If enabled, will keep the mac on after shutdown.
 	  If unsure, say N.
 
@@ -87,6 +103,7 @@ config R8125_EEE
 	default y
         depends on R8125
         help
+	  This enables ENABLE_EEE flag.
           Support Energy-Efficient Ethernet (EEE).
 	  If unsure, say Y.
 
@@ -95,6 +112,7 @@ config R8125_S0_MAGIC_PACKET
 	default n
         depends on R8125
         help
+	  This enables ENABLE_S0_MAGIC_PACKET flag.
           Enable magic packet.
 	  If unsure, say N.
 
@@ -103,22 +121,15 @@ config R8125_TX_NO_CLOSE
 	default y
         depends on R8125
         help
+	  This enables ENABLE_TX_NO_CLOSE flag.
 	  If unsure, say Y.
 
 config R8125_MULTI_MSIX_VECTOR
         bool "Enable Multi MSIX Vector"
-	default y
+	default n
         depends on R8125
         help
-	  If unsure, say Y.
-
-config R8125_MULTIPLE_RX_QUEUE
-        bool "Enable Multiple rx queue"
-	default y
-        depends on R8125
-	depends on R8125_MULTI_MSIX_VECTOR
-        help
-	  If unsure, say Y.
+	  If enabled, the DISABLE_MULTI_MSIX_VECTOR flag is not set.
 
 config R8125_MULTIPLE_TX_QUEUE
         bool "Enable Multiple tx queue"
@@ -126,6 +137,18 @@ config R8125_MULTIPLE_TX_QUEUE
         depends on R8125
 	depends on R8125_MULTI_MSIX_VECTOR
         help
+	  This enables ENABLE_MULTIPLE_TX_QUEUE flag.
+	  Support Multiple tx queue.
+	  If unsure, say Y.
+
+config R8125_RSS_SUPPORT
+        bool "Enable Receive Side Scaling (RSS)"
+	default y
+        depends on R8125
+	depends on R8125_MULTI_MSIX_VECTOR
+        help
+	  This enables ENABLE_RSS_SUPPORT flag.
+	  Support Receive Side Scaling (RSS).
 	  If unsure, say Y.
 
 config R8125_PTP_SUPPORT
@@ -134,6 +157,7 @@ config R8125_PTP_SUPPORT
 	depends on PTP_1588_CLOCK
         depends on R8125
         help
+	  This enables ENABLE_PTP_SUPPORT flag.
 	  Support IEEE 1588 PTP Clock.
 
 config R8125_PTP_MASTER_MODE
@@ -142,6 +166,7 @@ config R8125_PTP_MASTER_MODE
         depends on R8125
 	depends on R8125_PTP_SUPPORT
         help
+	  This enables ENABLE_PTP_MASTER_MODE flag.
 	  Enable PTP master mode.
 
 config R8125_USE_FIRMWARE_FILE
@@ -149,22 +174,16 @@ config R8125_USE_FIRMWARE_FILE
 	default n
         depends on R8125
         help
-	  Use firmware file.
+	  This enables ENABLE_USE_FIRMWARE_FILE flag.
+	  Use external firmware file, the path is "/lib/firmware/rtl_nic/".
 	  If unsure, say N.
-
-config R8125_PM_SUPPORT
-        bool "Enable PM Support"
-	default y
-        depends on R8125
-        help
-	  Enable PM Support.
-	  If unsure, say Y.
 
 config R8125_DOUBLE_VLAN
         bool "Enable double vlan"
 	default n
         depends on R8125
         help
+	  This enables ENABLE_DOUBLE_VLAN flag.
 	  If unsure, say N.
 
 config R8125_PAGE_REUSE
@@ -172,11 +191,6 @@ config R8125_PAGE_REUSE
 	default n
         depends on R8125
         help
+	  This enables ENABLE_PAGE_REUSE flag.
 	  If unsure, say N.
 
-config R8125_RX_PACKET_FRAGMENT
-        bool "Enable rx packet fragment"
-	default n
-        depends on R8125
-        help
-	  If unsure, say N.
