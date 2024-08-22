@@ -738,49 +738,28 @@ static const struct acpi_device_id spidev_acpi_ids[] = {
 	 * description of the connected peripheral and they should also use
 	 * a proper driver instead of poking directly to the SPI bus.
 	 */
-	{ "SPT0001", SPIDEV_ACPI_DUMMY },
-	{ "SPT0002", SPIDEV_ACPI_DUMMY },
-	{ "SPT0003", SPIDEV_ACPI_DUMMY },
+	{ "SPT0001", (kernel_ulong_t)&spidev_acpi_check },
+	{ "SPT0002", (kernel_ulong_t)&spidev_acpi_check },
+	{ "SPT0003", (kernel_ulong_t)&spidev_acpi_check },
 	{},
 };
 MODULE_DEVICE_TABLE(acpi, spidev_acpi_ids);
-
-static void spidev_probe_acpi(struct spi_device *spi)
-{
-	const struct acpi_device_id *id;
-
-	if (!has_acpi_companion(&spi->dev))
-		return;
-
-	id = acpi_match_device(spidev_acpi_ids, &spi->dev);
-	if (WARN_ON(!id))
-		return;
-
-	if (id->driver_data == SPIDEV_ACPI_DUMMY)
-		dev_warn(&spi->dev, "do not use this driver in production systems!\n");
-}
-#else
-static inline void spidev_probe_acpi(struct spi_device *spi) {}
-#endif
 
 /*-------------------------------------------------------------------------*/
 
 static int spidev_probe(struct spi_device *spi)
 {
+	int (*match)(struct device *dev);
 	struct spidev_data	*spidev;
 	int			status;
 	unsigned long		minor;
 
-	/*
-	 * spidev should never be referenced in DT without a specific
-	 * compatible string, it is a Linux implementation thing
-	 * rather than a description of the hardware.
-	 */
- 	if (spi->dev.of_node && !of_match_device(spidev_dt_ids, &spi->dev)) {
-		dev_info(&spi->dev, "probing from DT");
- 	}
-
-	spidev_probe_acpi(spi);
+	match = device_get_match_data(&spi->dev);
+	if (match) {
+		status = match(&spi->dev);
+		if (status)
+			return status;
+	}
 
 	/* Allocate driver data */
 	spidev = kzalloc(sizeof(*spidev), GFP_KERNEL);
