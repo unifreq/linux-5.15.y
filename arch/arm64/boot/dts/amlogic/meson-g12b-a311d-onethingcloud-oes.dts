@@ -306,6 +306,8 @@
 		/* MAC_INTR on GPIOZ_14 */
 		/* interrupts = <IRQID_GPIOZ_14 IRQ_TYPE_LEVEL_LOW>; */
 		interrupts = <26 IRQ_TYPE_LEVEL_LOW>; /* tested by voltmeter */
+
+		realtek,led-data = <0xC160>;
 	};
 };
 
