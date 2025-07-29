@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
+ * For WXY OES-Plus v2.2
  * Copyright (c) 2019 BayLibre, SAS
  * Author: Neil Armstrong <narmstrong@baylibre.com>
  * Copyright (c) 2019 Christian Hewitt <christianshewitt@gmail.com>
@@ -15,7 +16,7 @@
 
 / {
 	compatible = "onethingcloud,oes-plus", "amlogic,s922x", "amlogic,g12b";
-	model = "OES Plus";
+	model = "OES Plus v2.2";
 
 	aliases {
 		rtc0 = &vrtc;
