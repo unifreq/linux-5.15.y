@@ -1,0 +1,238 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * For WXY OES-Plus v2.1
+ * Copyright (c) 2019 BayLibre, SAS
+ * Author: Neil Armstrong <narmstrong@baylibre.com>
+ * Copyright (c) 2019 Christian Hewitt <christianshewitt@gmail.com>
+ * Copyright (c) 2025 OES Plus (Based on kaitian888, revised by zjycb,caojiezi2003)
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include "meson-g12b-gtking-pro.dts"
+
+/ {
+	compatible = "onethingcloud,oes-plus", "amlogic,s922x", "amlogic,g12b";
+	model = "OES Plus v2.1";
+
+	aliases {
+		rtc0 = &vrtc;
+		/delete-property/ rtc1;
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0xf0000000>;
+	};
+
+	/delete-node/ gpio-keys-polled;
+	gpio-keys-polled {
+		compatible = "gpio-keys-polled";
+		poll-interval = <100>;
+
+		power-button {
+			label = "power";
+			linux,code = <KEY_POWER>;
+			gpios = <&gpio 60 GPIO_ACTIVE_HIGH>; /* GPIOX_28 */
+		};
+
+		reset-button {
+			label = "reset";
+			linux,code = <KEY_REFRESH>;
+			gpios = <&gpio 59 GPIO_ACTIVE_HIGH>; /* GPIOX_27 */
+		};
+	};
+
+	/delete-node/ leds;
+	leds {
+		compatible = "gpio-leds";
+
+		sys_red_led {
+			label = "sys_red_led";
+			gpios = <&gpio_ao 10 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+			retain-state-suspended;
+		};
+
+		sys_green_led {
+			label = "sys_green_led";
+			gpios = <&gpio_ao 11 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+			retain-state-suspended;
+		};
+
+		net_green_led {
+			label = "net_green_led";
+			gpios = <&gpio 55 GPIO_ACTIVE_HIGH>; /* GPIOX_23 */
+			linux,default-trigger = "0.0:00:link";
+			default-state = "off";
+		};
+
+		net_red_led {
+			label = "net_red_led";
+			gpios = <&gpio 57 GPIO_ACTIVE_LOW>; /* GPIOX_25 */
+			linux,default-trigger = "0.0:00:link";
+			default-state = "on";
+		};
+
+		sata1_led: sata1 {
+			label = "sata1_led";
+			gpios = <&gpio 58 GPIO_ACTIVE_HIGH>; /* GPIOX_26 */
+			default-state = "on";
+			retain-state-suspended;
+		};
+
+		sata2_led: sata2 {
+			label = "sata2_led";
+			gpios = <&gpio 52 GPIO_ACTIVE_HIGH>; /* GPIOX_20 */
+			default-state = "off";
+			retain-state-suspended;
+		};
+
+		sata3_led: sata3 {
+			label = "sata3_led";
+			gpios = <&gpio 53 GPIO_ACTIVE_HIGH>; /* GPIOX_21 */
+			default-state = "off";
+			retain-state-suspended;
+		};
+
+		sata1_power {
+			label = "sata1_power";
+			gpios = <&gpio 51 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+			retain-state-suspended;
+		};
+
+		sata2_power {
+			label = "sata2_power";
+			gpios = <&gpio 50 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+			retain-state-suspended;
+		};
+
+		sata3_power {
+			label = "sata3_power";
+			gpios = <&gpio 49 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+			retain-state-suspended;
+		};
+
+		usb2_power {
+			label = "usb2_power";
+			gpios = <&gpio 22 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+			retain-state-suspended;
+		};
+
+		fan_en {
+			label = "FAN_GPIO";
+			gpios = <&gpio 45 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+			retain-state-suspended;
+		};
+	};
+};
+
+&ethmac {
+	status = "okay";
+	phy-handle = <&external_phy>;
+	phy-mode = "rgmii-rxid";
+	rx-internal-delay-ps = <1000>;
+	amlogic,invert-rxclk;
+};
+
+&external_phy {
+	reset-gpios = <&gpio 48 GPIO_ACTIVE_LOW>; /* GPIOX_16 */
+	reset-assert-us = <10000>;
+	reset-deassert-us = <20000>;
+
+	interrupt-parent = <&gpio_intc>;
+	interrupts = <26 IRQ_TYPE_EDGE_FALLING>;
+};
+
+&internal_ephy {
+	status = "disabled";
+};
+
+&periphs_pinctrl {
+	external_eth_pins: external-eth-pins {
+		mux {
+			groups = "eth_mdio", "eth_mdc", "eth_rgmii_rx_clk",
+				 "eth_rx_dv", "eth_rxd0", "eth_rxd1",
+				 "eth_rxd2_rgmii", "eth_rxd3_rgmii",
+				 "eth_rgmii_tx_clk", "eth_txen", "eth_txd0",
+				 "eth_txd1", "eth_txd2_rgmii", "eth_txd3_rgmii";
+			function = "eth";
+			drive-strength-microamp = <3000>;
+			bias-disable;
+		};
+	};
+};
+
+&emmc_pwrseq {
+	/delete-property/ reset-gpios;
+};
+
+&sdio_pwrseq {
+	/delete-property/ reset-gpios;
+};
+
+&usb1_pow {
+	/delete-property/ gpio;
+	/delete-property/ enable-active-high;
+	regulator-always-on;
+};
+
+&usb_pwr_en {
+	/delete-property/ gpio;
+	/delete-property/ enable-active-high;
+	regulator-always-on;
+};
+
+&pcie {
+	status = "okay";
+	interrupt-names = "msi";
+	reset-gpio = <&gpio 20 GPIO_ACTIVE_LOW>; /* GPIOH_4 */
+};
+
+&internal_ephy {
+	status = "disabled";
+};
+
+&cecb_AO {
+	status = "disable";
+};
+
+&i2c3 {
+	status = "disable";
+	/delete-node/ rtc@51;
+};
+
+&i2c2 {
+	status = "okay";
+};
+
+&uart_A {
+	bluetooth {
+		status = "disabled";
+	};
+};
+
+&sd_emmc_a {
+	status = "disable";
+};
+
+&sd_emmc_b {
+	status = "disable";
+};
+
+&sd_emmc_c {
+	/delete-property/ mmc-pwrseq;
+};
+
+&usb {
+	phy-names = "usb2-phy0", "usb2-phy1";
+};
