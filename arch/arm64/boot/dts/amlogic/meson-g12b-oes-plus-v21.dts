@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
- * For WXY OES-Plus v2.2
+ * For WXY OES-Plus v2.1
  * Copyright (c) 2019 BayLibre, SAS
  * Author: Neil Armstrong <narmstrong@baylibre.com>
  * Copyright (c) 2019 Christian Hewitt <christianshewitt@gmail.com>
@@ -16,7 +16,7 @@
 
 / {
 	compatible = "onethingcloud,oes-plus", "amlogic,s922x", "amlogic,g12b";
-	model = "OES Plus v2.2";
+	model = "OES Plus v2.1";
 
 	aliases {
 		rtc0 = &vrtc;
@@ -137,13 +137,39 @@
 };
 
 &ethmac {
-	phy-mode = "rgmii-txid";
-	amlogic,tx-delay-ns = <0>;
+	status = "okay";
+	phy-handle = <&external_phy>;
+	phy-mode = "rgmii-rxid";
+	rx-internal-delay-ps = <1000>;
+	amlogic,invert-rxclk;
 };
 
 &external_phy {
-	/delete-property/ reset-gpios;
+	reset-gpios = <&gpio 48 GPIO_ACTIVE_LOW>; /* GPIOX_16 */
+	reset-assert-us = <10000>;
+	reset-deassert-us = <20000>;
+
+	interrupt-parent = <&gpio_intc>;
 	interrupts = <26 IRQ_TYPE_EDGE_FALLING>;
+};
+
+&internal_ephy {
+	status = "disabled";
+};
+
+&periphs_pinctrl {
+	external_eth_pins: external-eth-pins {
+		mux {
+			groups = "eth_mdio", "eth_mdc", "eth_rgmii_rx_clk",
+				 "eth_rx_dv", "eth_rxd0", "eth_rxd1",
+				 "eth_rxd2_rgmii", "eth_rxd3_rgmii",
+				 "eth_rgmii_tx_clk", "eth_txen", "eth_txd0",
+				 "eth_txd1", "eth_txd2_rgmii", "eth_txd3_rgmii";
+			function = "eth";
+			drive-strength-microamp = <3000>;
+			bias-disable;
+		};
+	};
 };
 
 &emmc_pwrseq {
