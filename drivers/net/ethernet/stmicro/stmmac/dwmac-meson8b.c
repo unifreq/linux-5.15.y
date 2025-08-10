@@ -385,6 +385,29 @@ static int meson8b_init_prg_eth(struct meson8b_dwmac *dwmac)
 	return 0;
 }
 
+static int meson8b_prg_eth_override(struct meson8b_dwmac *dwmac)
+{
+	struct device_node *np = dwmac->dev->of_node;
+	u32 override[2] = { 0 };
+	int ret;
+
+	ret = of_property_read_u32_array(np, "amlogic,prg-eth-reg0", override,
+					 2);
+	if (!ret) {
+		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0, override[0],
+					override[1]);
+	}
+
+	ret = of_property_read_u32_array(np, "amlogic,prg-eth-reg1", override,
+					 2);
+	if (!ret) {
+		meson8b_dwmac_mask_bits(dwmac, PRG_ETH1, override[0],
+					override[1]);
+	}
+
+	return 0;
+}
+
 static int meson8b_dwmac_probe(struct platform_device *pdev)
 {
 	struct plat_stmmacenet_data *plat_dat;
@@ -478,6 +501,8 @@ static int meson8b_dwmac_probe(struct platform_device *pdev)
 	ret = meson8b_init_prg_eth(dwmac);
 	if (ret)
 		goto err_remove_config_dt;
+
+	meson8b_prg_eth_override(dwmac);
 
 	plat_dat->bsp_priv = dwmac;
 
