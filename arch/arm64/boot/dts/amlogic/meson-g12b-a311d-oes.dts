@@ -25,6 +25,7 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+		kaslr-seed = <0xfeedbeef 0xc0def00d>;
 	};
 
 	memory@0 {
@@ -49,9 +50,9 @@
 			gpios = <&gpio GPIOH_4 GPIO_ACTIVE_LOW>;
 		};
 
-		rec-btn {
-			label = "rec-btn";
-			linux,code = <KEY_VENDOR>;
+		rst-btn {
+			label = "rst-btn";
+			linux,code = <KEY_RESTART>;
 			gpios = <&gpio GPIOA_0 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -304,18 +305,11 @@
 
 		interrupt-parent = <&gpio_intc>;
 		/* MAC_INTR on GPIOZ_14 */
-		/* interrupts = <IRQID_GPIOZ_14 IRQ_TYPE_LEVEL_LOW>; */
 		interrupts = <26 IRQ_TYPE_LEVEL_LOW>; /* tested by voltmeter */
 
-		realtek,led-data = <0xC160>;
+		realtek,led-data = <0xc160>;
 	};
 };
-
-/*
-&npu {
-	status = "okay";
-};
-*/
 
 &pcie {
 	status = "okay";
