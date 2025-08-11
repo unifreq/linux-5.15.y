@@ -102,16 +102,12 @@
 			linux,default-trigger = "0.0:00:link";
 		};
 
-		/*
-		 * Currently, it is not possible to bind each LED's trigger to a specific SATA hard drive in the kernel.
-		 * Instead, in user space, SATA hard drives can be detected and LEDs controlled through udev rules or scripts.
-		 */
 		sata1-led-green {
 			function = LED_FUNCTION_DISK;
 			color = <LED_COLOR_ID_GREEN>;
 			gpios = <&gpio GPIOA_14 GPIO_ACTIVE_LOW>;
 			default-state = "off";
-			/* linux,default-trigger = "ata1"; */
+			linux,default-trigger = "ata1";
 		};
 
 		sata2-led-green {
@@ -119,7 +115,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			gpios = <&gpio GPIOA_15 GPIO_ACTIVE_LOW>;
 			default-state = "off";
-			/* linux,default-trigger = "ata2"; */
+			linux,default-trigger = "ata2";
 		};
 
 		sata3-led-green {
@@ -127,7 +123,7 @@
 			color = <LED_COLOR_ID_GREEN>;
 			gpios = <&gpio GPIOC_0 GPIO_ACTIVE_LOW>;
 			default-state = "off";
-			/* linux,default-trigger = "ata3"; */
+			linux,default-trigger = "ata3";
 		};
 	};
 
