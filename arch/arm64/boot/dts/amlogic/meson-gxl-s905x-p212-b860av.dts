@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2016 Endless Computers, Inc.
+ * Author: Carlo Caione <carlo@endlessm.com>
+ */
+
+/dts-v1/;
+
+#include "meson-gxl-s905x-p212.dts"
+
+/ {
+	compatible = "amlogic,p212", "amlogic,s905x", "amlogic,meson-gxl";
+	model = "Amlogic Meson GXL (S905X) P212 Development Board";
+};
+
+&sdio_pwrseq {
+    compatible = "mmc-pwrseq-simple";
+    reset-gpios = <&gpio GPIODV_27 GPIO_ACTIVE_LOW>;
+};
+
+&sd_emmc_a {
+    max-frequency = <200000000>;
+
+    //8189FTV
+    wifi: wifi@1 {
+        compatible = "realtek,rtl8189fs", "realtek,rtl8189ftv";
+        reg = <1>;
+    };
+};
