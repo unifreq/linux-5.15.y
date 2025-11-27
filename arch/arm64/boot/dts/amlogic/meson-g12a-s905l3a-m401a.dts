@@ -83,7 +83,7 @@
 	cap-mmc-highspeed;
 	mmc-ddr-1_8v;
 	mmc-hs200-1_8v;
-	max-frequency = <100000000>;
+	max-frequency = <0x2faf080>;
 };
 
 /* CPU Overclock */
